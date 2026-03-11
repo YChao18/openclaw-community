@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-geist-sans:
+    "IBM Plex Sans", "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --font-geist-mono:
+    "IBM Plex Mono", "SFMono-Regular", "Cascadia Code", "Consolas", monospace;
+  --background: #0b111b;
+  --background-secondary: #111827;
+  --surface: rgba(17, 24, 39, 0.78);
+  --surface-strong: rgba(17, 24, 39, 0.92);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-default: rgba(148, 163, 184, 0.18);
+  --brand-yellow: #eab308;
+  --brand-yellow-soft: color-mix(in srgb, var(--brand-yellow) 14%, transparent);
+  --brand-lobster: #dc2626;
+  --brand-lobster-soft: color-mix(
+    in srgb,
+    var(--brand-lobster) 10%,
+    transparent
+  );
+  --interactive-muted: rgba(255, 255, 255, 0.04);
+  --interactive-muted-hover: rgba(255, 255, 255, 0.08);
+  --overlay-subtle: rgba(255, 255, 255, 0.03);
+  --overlay-strong: rgba(2, 6, 23, 0.26);
+  --hero-glow-yellow: color-mix(in srgb, var(--brand-yellow) 16%, transparent);
+  --hero-glow-lobster: color-mix(in srgb, var(--brand-lobster) 8%, transparent);
+  --shadow-card: rgba(2, 6, 23, 0.26);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-default: var(--border-default);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-yellow-soft: var(--brand-yellow-soft);
+  --color-brand-lobster: var(--brand-lobster);
+  --color-brand-lobster-soft: var(--brand-lobster-soft);
+  --color-interactive-muted: var(--interactive-muted);
+  --color-interactive-muted-hover: var(--interactive-muted-hover);
+  --color-overlay-subtle: var(--overlay-subtle);
+  --color-overlay-strong: var(--overlay-strong);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.light {
+  --background: #ffffff;
+  --background-secondary: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.84);
+  --surface-strong: rgba(255, 255, 255, 0.96);
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-default: rgba(17, 24, 39, 0.12);
+  --interactive-muted: rgba(15, 23, 42, 0.04);
+  --interactive-muted-hover: rgba(15, 23, 42, 0.08);
+  --overlay-subtle: rgba(15, 23, 42, 0.03);
+  --overlay-strong: rgba(15, 23, 42, 0.06);
+  --hero-glow-yellow: color-mix(in srgb, var(--brand-yellow) 14%, transparent);
+  --hero-glow-lobster: color-mix(in srgb, var(--brand-lobster) 6%, transparent);
+  --shadow-card: rgba(15, 23, 42, 0.08);
+}
+
+* {
+  border-color: var(--border-default);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, var(--hero-glow-yellow), transparent 34%),
+    radial-gradient(
+      circle at 88% 8%,
+      var(--hero-glow-lobster),
+      transparent 18%
+    ),
+    linear-gradient(180deg, var(--background-secondary), var(--background));
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a,
+button {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-yellow) 30%, transparent);
+  color: var(--text-primary);
+}
