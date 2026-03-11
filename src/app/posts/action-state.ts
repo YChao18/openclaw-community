@@ -1,0 +1,14 @@
+export type CommunityActionErrors = {
+  content?: string;
+  tags?: string;
+  title?: string;
+};
+
+export type CommunityActionState = {
+  errors?: CommunityActionErrors;
+  message: string;
+};
+
+export const initialCommunityActionState: CommunityActionState = {
+  message: "",
+};

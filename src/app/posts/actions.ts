@@ -3,27 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import type {
+  CommunityActionErrors,
+  CommunityActionState,
+} from "@/app/posts/action-state";
 import {
   createUniquePostSlug,
   getPostExcerpt,
   type CommunityTagOption,
 } from "@/lib/community";
 import { prisma } from "@/lib/prisma";
-
-type CommunityActionErrors = {
-  content?: string;
-  tags?: string;
-  title?: string;
-};
-
-export type CommunityActionState = {
-  errors?: CommunityActionErrors;
-  message: string;
-};
-
-export const initialCommunityActionState: CommunityActionState = {
-  message: "",
-};
 
 function normalizeTextEntry(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -35,6 +24,10 @@ function getTagIds(formData: FormData) {
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+function getPostRedirectPath(slug: string) {
+  return `/posts/${encodeURIComponent(slug)}`;
 }
 
 function validatePostInput(input: {
@@ -79,9 +72,8 @@ export async function createPostAction(
 
   if (!session?.user?.id) {
     return {
-      message:
-        "当前版本尚未开放登录功能，后续将支持邮箱验证码注册登录。",
-    } satisfies CommunityActionState;
+      message: "请先登录后再发布帖子。",
+    };
   }
 
   const availableTags = await prisma.tag.findMany({
@@ -114,7 +106,7 @@ export async function createPostAction(
     return {
       errors,
       message: "请完善帖子内容后再提交。",
-    } satisfies CommunityActionState;
+    };
   }
 
   const slug = await createUniquePostSlug(title);
@@ -139,7 +131,8 @@ export async function createPostAction(
 
   revalidatePath("/posts");
   revalidatePath("/tags");
-  redirect(`/posts/${post.slug}`);
+  revalidatePath("/me/posts");
+  redirect(getPostRedirectPath(post.slug));
 }
 
 export async function createCommentAction(
@@ -153,15 +146,14 @@ export async function createCommentAction(
 
   if (!session?.user?.id) {
     return {
-      message:
-        "当前版本尚未开放登录功能，后续将支持邮箱验证码注册登录。",
-    } satisfies CommunityActionState;
+      message: "请先登录后参与讨论。",
+    };
   }
 
   if (!postId || !postSlug) {
     return {
       message: "帖子信息缺失，请刷新后重试。",
-    } satisfies CommunityActionState;
+    };
   }
 
   if (content.length < 3) {
@@ -170,7 +162,7 @@ export async function createCommentAction(
         content: "评论至少需要 3 个字符。",
       },
       message: "评论内容太短了。",
-    } satisfies CommunityActionState;
+    };
   }
 
   await prisma.comment.create({
@@ -183,5 +175,6 @@ export async function createCommentAction(
 
   revalidatePath(`/posts/${postSlug}`);
   revalidatePath("/posts");
-  redirect(`/posts/${postSlug}#comments`);
+  revalidatePath("/me/posts");
+  redirect(`${getPostRedirectPath(postSlug)}#comments`);
 }

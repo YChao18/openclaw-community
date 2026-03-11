@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PenSquare, Tags } from "lucide-react";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { AuthNotice } from "@/components/community/auth-notice";
 import { PostComposerForm } from "@/components/community/post-composer-form";
 import { getTagOptions } from "@/lib/community";
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewPostPage() {
-  const session = await auth();
+  const user = await getCurrentUser();
   const { isDatabaseReady, tags } = await loadComposerData();
 
   return (
@@ -22,10 +22,10 @@ export default async function NewPostPage() {
             发布讨论
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight text-primary md:text-5xl">
-            把你的经验、问题和一线实践沉淀到龙虾塘。
+            把你的经验、问题和一线实践沉淀到龙虾塘
           </h1>
           <p className="mt-5 text-sm leading-8 text-secondary md:text-base">
-            当前发帖表单已经准备好，但 M1 不开放真实登录。后续在 M2 接入邮箱验证码注册登录后，这里会成为正式发帖入口。
+            登录后即可发布帖子，标题、正文和标签会继续沿用 M1 的社区结构与设计系统，不影响已有浏览体验。
           </p>
         </div>
 
@@ -38,9 +38,9 @@ export default async function NewPostPage() {
               </p>
             </div>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-secondary">
-              <li>M1 阶段仅演示发布流程与权限约束。</li>
               <li>标题、正文和至少一个标签为必填。</li>
-              <li>登录开放后，发布成功会直接跳转到详情页。</li>
+              <li>发布成功后会直接跳转到帖子详情页。</li>
+              <li>仅登录用户可发布帖子。</li>
             </ul>
           </article>
 
@@ -53,7 +53,7 @@ export default async function NewPostPage() {
             </div>
             <p className="mt-4 text-3xl font-semibold text-primary">{tags.length}</p>
             <p className="mt-2 text-sm leading-7 text-secondary">
-              可直接选择已有标签归类帖子，列表页和详情页会同步展示这些入口。
+              你可以直接选择已有标签归类帖子，列表页和详情页会同步展示这些入口。
             </p>
           </article>
         </div>
@@ -63,13 +63,15 @@ export default async function NewPostPage() {
         <section className="rounded-[1.75rem] border border-default bg-surface p-6">
           <p className="text-lg font-semibold text-primary">数据库尚未就绪</p>
           <p className="mt-3 text-sm leading-7 text-secondary">
-            请先启动 PostgreSQL，并执行 Prisma migration 与 seed，之后就可以正常浏览帖子与标签数据。
+            请先启动 PostgreSQL，并执行 Prisma migration 与 seed，之后就可以正常浏览和发布社区内容。
           </p>
         </section>
-      ) : !session?.user ? (
+      ) : !user ? (
         <AuthNotice
-          title="登录暂未启用"
-          message="当前版本尚未开放登录功能，后续将支持邮箱验证码注册登录。M1 阶段会保留清晰的权限提示，但不会开放真实发帖。"
+          title="登录后即可发布"
+          message="当前发布功能已经接入真实登录限制。请先完成邮箱验证码登录，再继续发帖。"
+          actionHref="/login?redirect=%2Fposts%2Fnew"
+          actionLabel="去登录 / 注册"
         />
       ) : tags.length === 0 ? (
         <section className="rounded-[1.75rem] border border-default bg-surface p-6">

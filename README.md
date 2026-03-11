@@ -1,12 +1,13 @@
 # 碳硅合创·龙虾塘
 
-The OpenClaw Community 的首版社区骨架项目。当前已完成 M0：工程初始化、数据库与鉴权基础接线、全局布局、首页静态框架、深色模式与 Docker 部署支持。
+The OpenClaw Community 的社区项目，当前已完成 M1 社区基础能力，并在 M2 接入邮箱验证码登录、数据库 session、个人中心以及社区权限控制。
 
 ## 技术栈
 
-- Next.js 16 + TypeScript + Tailwind CSS 4
+- Next.js 16 + App Router + TypeScript
+- Tailwind CSS 4
 - PostgreSQL + Prisma
-- Auth.js / NextAuth + Prisma Adapter
+- 自建邮箱验证码登录 + 数据库 Session
 - Docker / Docker Compose
 
 ## 本地启动
@@ -29,10 +30,10 @@ copy .env.example .env
 docker compose up -d postgres
 ```
 
-4. 初始化数据库
+4. 执行 Prisma migration
 
 ```bash
-npm run db:migrate -- --name init
+npm run db:migrate -- --name m2_email_auth
 ```
 
 5. 启动开发环境
@@ -43,28 +44,39 @@ npm run dev
 
 访问 [http://localhost:3000](http://localhost:3000)。
 
-## Docker 启动整站
+## 邮箱验证码登录配置
 
-```bash
-docker compose up --build -d
-```
+默认邮件服务为 Resend，代码结构已预留替换空间。
 
-首次启动整站后，如需初始化数据库，可进入容器或在宿主机执行：
+- `RESEND_API_KEY`: Resend API Key
+- `MAIL_FROM`: 发件人地址，例如 `OpenClaw <onboarding@resend.dev>`
+- `AUTH_SECRET`: 登录验证码哈希与 session token 哈希使用的密钥
+- `SESSION_SECRET`: 可选，若设置则优先于 `AUTH_SECRET`
+- `APP_URL` / `NEXT_PUBLIC_APP_URL`: 应用访问地址
 
-```bash
-npm run db:migrate -- --name init
-```
+开发环境下如果没有配置 `RESEND_API_KEY` 或 `MAIL_FROM`，系统会退回到控制台输出验证码，方便本地联调。
 
-## 环境变量
+## M2 功能范围
 
-`.env.example` 已提供以下变量：
+- `/login`: 邮箱 + 6 位验证码登录 / 注册
+- `/me`: 个人中心
+- `/me/posts`: 我的帖子
+- `POST /api/auth/send-code`: 发送验证码
+- `POST /api/auth/verify-code`: 校验验证码并建立会话
+- 顶部导航登录态
+- 登录后发帖与评论
+- 退出登录
 
-- `DATABASE_URL`: 本地开发使用的 PostgreSQL 连接串
-- `NEXT_PUBLIC_APP_URL`: 应用公开访问地址
-- `AUTH_SECRET`: Auth.js 密钥
-- `AUTH_TRUST_HOST`: 反向代理或 Docker 场景下建议设为 `true`
-- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`: GitHub OAuth 配置
-- `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD`: Docker PostgreSQL 默认参数
+## 本地测试步骤
+
+1. 启动数据库并执行 migration。
+2. 运行 `npm run dev`。
+3. 打开 `/login`，输入邮箱并发送验证码。
+4. 如果未配置 Resend，到终端中查看 fallback 打印出的验证码。
+5. 输入验证码完成登录。
+6. 访问 `/posts/new` 发布帖子。
+7. 打开任意帖子详情页发表评论。
+8. 访问 `/me` 和 `/me/posts` 检查登录态与个人内容。
 
 ## 常用命令
 
@@ -72,51 +84,7 @@ npm run db:migrate -- --name init
 npm run dev
 npm run lint
 npm run build
-npm run format
 npm run db:generate
-npm run db:migrate -- --name init
+npm run db:migrate -- --name m2_email_auth
 npm run db:studio
 ```
-
-## 当前目录结构
-
-```text
-.
-|-- prisma/
-|   `-- schema.prisma
-|-- src/
-|   |-- app/
-|   |   |-- api/auth/[...nextauth]/route.ts
-|   |   |-- globals.css
-|   |   |-- layout.tsx
-|   |   `-- page.tsx
-|   |-- components/
-|   |   |-- layout/
-|   |   `-- ui/
-|   |-- config/
-|   |-- lib/
-|   |-- types/
-|   `-- auth.ts
-|-- .env.example
-|-- docker-compose.yml
-|-- Dockerfile
-`-- README.md
-```
-
-## M0 完成范围
-
-- 初始化 Next.js + TypeScript + Tailwind CSS 项目
-- 配置 ESLint、Prettier、基础脚本与 standalone 构建
-- 接入 Prisma、PostgreSQL 与 Auth.js 基础配置
-- 设计 `app / components / config / lib / types / prisma` 目录结构
-- 实现全局 Layout、Header、Footer
-- 实现首页静态框架
-- 实现系统级深色模式切换
-- 提供 `.env.example`、Docker 和 README
-
-## M1 建议
-
-- 优先做帖子模型、分类标签、帖子列表页和详情页
-- 增加登录后发帖入口、个人资料页和最小权限控制
-- 落地问答流：提问、回答、采纳、排序
-- 加入基础内容审核字段和后台预留结构

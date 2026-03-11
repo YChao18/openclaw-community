@@ -1,12 +1,17 @@
+import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
 type AuthNoticeProps = {
+  actionHref?: string;
+  actionLabel?: string;
   compact?: boolean;
   message?: string;
   title: string;
 };
 
 export function AuthNotice({
+  actionHref,
+  actionLabel,
   compact = false,
   message,
   title,
@@ -22,9 +27,16 @@ export function AuthNotice({
         <p className="text-sm font-medium tracking-[0.2em] uppercase">{title}</p>
       </div>
       <p className="mt-4 text-sm leading-7 text-secondary">
-        {message ??
-          "当前版本尚未开放登录功能，后续将支持邮箱验证码注册登录。M1 阶段仅开放帖子浏览与权限提示。"}
+        {message ?? "请先登录后继续操作。"}
       </p>
+      {actionHref && actionLabel ? (
+        <Link
+          href={actionHref}
+          className="mt-5 inline-flex rounded-full border border-default bg-surface px-4 py-2 text-sm text-primary transition hover:bg-interactive-muted-hover"
+        >
+          {actionLabel}
+        </Link>
+      ) : null}
     </section>
   );
 }

@@ -1,10 +1,12 @@
 import { PostStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getUserDisplayName } from "@/lib/user/service";
 
 const postFeedArgs = Prisma.validator<Prisma.PostDefaultArgs>()({
   include: {
     author: {
       select: {
+        email: true,
         id: true,
         image: true,
         name: true,
@@ -40,6 +42,7 @@ const postDetailArgs = Prisma.validator<Prisma.PostDefaultArgs>()({
   include: {
     author: {
       select: {
+        email: true,
         headline: true,
         id: true,
         image: true,
@@ -51,6 +54,7 @@ const postDetailArgs = Prisma.validator<Prisma.PostDefaultArgs>()({
       include: {
         author: {
           select: {
+            email: true,
             id: true,
             image: true,
             name: true,
@@ -118,10 +122,9 @@ export async function getTagFacets() {
   const tags = await prisma.tag.findMany({
     orderBy: [{ name: "asc" }],
     select: {
-      id: true,
       description: true,
+      id: true,
       name: true,
-      slug: true,
       posts: {
         select: {
           id: true,
@@ -130,6 +133,7 @@ export async function getTagFacets() {
           status: PostStatus.PUBLISHED,
         },
       },
+      slug: true,
     },
   });
 
@@ -196,10 +200,11 @@ export function formatPostDate(date: Date) {
 }
 
 export function getAuthorDisplayName(author: {
+  email: string | null;
   name: string | null;
   username: string | null;
 }) {
-  return author.name ?? author.username ?? "OpenClaw 用户";
+  return getUserDisplayName(author);
 }
 
 export function getPostExcerpt(content: string) {
@@ -213,11 +218,15 @@ export function getPostExcerpt(content: string) {
 }
 
 export function slugifyPostTitle(title: string) {
-  const slug = title
+  const normalized = title
     .trim()
-    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  const slug = normalized
+    .replace(/[^a-z0-9\s-]/g, " ")
     .replace(/[\s_]+/g, "-")
-    .replace(/[^\p{Letter}\p{Number}-]+/gu, "")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import { initialCommunityActionState } from "@/app/posts/action-state";
 import {
   createCommentAction,
-  initialCommunityActionState,
 } from "@/app/posts/actions";
 import { SubmitButton } from "@/components/community/submit-button";
 

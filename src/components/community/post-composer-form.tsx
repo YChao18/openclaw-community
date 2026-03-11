@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import { initialCommunityActionState } from "@/app/posts/action-state";
 import {
   createPostAction,
-  initialCommunityActionState,
 } from "@/app/posts/actions";
-import type { CommunityTagOption } from "@/lib/community";
-import { cn } from "@/lib/utils";
 import { SubmitButton } from "@/components/community/submit-button";
+import { cn } from "@/lib/utils";
+import type { CommunityTagOption } from "@/lib/community";
 
 type PostComposerFormProps = {
   tags: CommunityTagOption[];

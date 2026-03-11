@@ -59,14 +59,14 @@ export const launchChecklist: ChecklistItem[] = [
       "Next.js、TypeScript、Tailwind CSS、ESLint、Prettier 与基础目录结构均已落地。",
   },
   {
-    title: "数据库与认证已接线",
+    title: "数据库与社区模型已接通",
     description:
-      "Prisma、PostgreSQL 与 Auth.js 已完成基础集成，具备继续扩展的能力。",
+      "Prisma、PostgreSQL 与社区内容模型已经完成首版集成，可继续迭代功能。",
   },
   {
-    title: "部署路径清晰可执行",
+    title: "M2 登录体系已上线",
     description:
-      "项目已提供 Docker、环境变量模板与本地初始化命令，可直接启动首版。",
+      "邮箱验证码登录、数据库 session、顶部导航登录态与社区权限控制已经接入。",
   },
 ];
 

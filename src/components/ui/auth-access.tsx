@@ -1,37 +1,50 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
-import { LoginComingSoon } from "@/components/ui/login-coming-soon";
+import { redirect } from "next/navigation";
+import { getCurrentUser, signOut } from "@/auth";
+import { getUserDisplayName } from "@/lib/user/service";
 
 export async function AuthAccess() {
-  const session = await auth();
+  const user = await getCurrentUser();
 
-  if (!session?.user) {
-    return <LoginComingSoon />;
+  if (!user) {
+    return (
+      <Link
+        href="/login"
+        className="rounded-full border border-brand-yellow/30 bg-brand-yellow-soft px-4 py-2 text-sm font-medium text-brand-yellow transition hover:bg-brand-yellow/20"
+      >
+        登录 / 注册
+      </Link>
+    );
   }
 
   return (
-    <form
-      action={async () => {
-        "use server";
-        await signOut({ redirectTo: "/" });
-      }}
-      className="flex items-center gap-2"
-    >
+    <div className="flex items-center gap-2">
       <Link
         href="/posts/new"
         className="hidden rounded-full border border-default bg-surface px-3 py-2 text-sm text-secondary transition hover:bg-interactive-muted-hover hover:text-primary md:inline-flex"
       >
-        去发帖
+        去发布
       </Link>
-      <span className="hidden text-sm text-secondary md:inline">
-        {session.user.name ?? session.user.email}
-      </span>
-      <button
-        type="submit"
-        className="rounded-full border border-default bg-surface px-4 py-2 text-sm transition hover:bg-interactive-muted-hover"
+      <Link
+        href="/me"
+        className="hidden rounded-full border border-default bg-surface px-3 py-2 text-sm text-secondary transition hover:bg-interactive-muted-hover hover:text-primary md:inline-flex"
       >
-        退出
-      </button>
-    </form>
+        {getUserDisplayName(user)}
+      </Link>
+      <form
+        action={async () => {
+          "use server";
+          await signOut();
+          redirect("/");
+        }}
+      >
+        <button
+          type="submit"
+          className="rounded-full border border-default bg-surface px-4 py-2 text-sm transition hover:bg-interactive-muted-hover"
+        >
+          退出登录
+        </button>
+      </form>
+    </div>
   );
 }

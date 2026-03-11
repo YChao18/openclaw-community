@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, MessageSquareText, PenSquare } from "lucide-react";
 import { notFound } from "next/navigation";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { AuthNotice } from "@/components/community/auth-notice";
 import { CommentForm } from "@/components/community/comment-form";
 import {
@@ -44,7 +44,7 @@ export async function generateMetadata({
 
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { slug } = await params;
-  const session = await auth();
+  const user = await getCurrentUser();
   const result = await loadPostDetail(slug);
 
   if (!result.isDatabaseReady) {
@@ -139,7 +139,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             <p className="mt-4 text-sm leading-7 text-secondary">
               {post.comments.length > 0
                 ? "围绕这篇帖子继续补充经验、提问上下文和解决方案。"
-                : "这篇帖子还没有评论，欢迎先浏览内容，后续登录开放后再参与讨论。"}
+                : "这篇帖子还没有评论，欢迎登录后参与讨论。"}
             </p>
           </div>
 
@@ -170,7 +170,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
                 还没有评论
               </h2>
               <p className="mt-4 text-sm leading-7 text-secondary">
-                当前帖子尚未收到回复。M1 阶段先开放浏览，评论登录能力将在 M2 随邮箱验证码登录一起开放。
+                现在已经支持邮箱验证码登录，完成登录后即可参与这篇帖子的讨论。
               </p>
             </div>
           )}
@@ -185,14 +185,18 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               </p>
             </div>
             <p className="mt-4 text-sm leading-7 text-secondary">
-              未登录用户可以浏览帖子和评论，但当前版本不会开放真实登录。后续将支持邮箱验证码注册登录，再开放评论能力。
+              登录用户可以直接发表评论，未登录用户仍然可以继续浏览帖子和评论内容。
             </p>
           </section>
 
-          {!session?.user ? (
+          {!user ? (
             <AuthNotice
-              title="评论暂未开放"
-              message="当前版本尚未开放登录功能，后续将支持邮箱验证码注册登录。M1 阶段你可以先浏览帖子与评论内容。"
+              title="登录后参与讨论"
+              message="你可以先完成邮箱验证码登录，再回来补充评论。"
+              actionHref={`/login?redirect=${encodeURIComponent(
+                `/posts/${post.slug}#comments`,
+              )}`}
+              actionLabel="去登录 / 注册"
             />
           ) : (
             <section className="rounded-[1.75rem] border border-default bg-surface p-6">
