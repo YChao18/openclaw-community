@@ -17,7 +17,14 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
-  keywords: ["OpenClaw", "开发者社区", "AI 社区", "Next.js", "Prisma"],
+  keywords: [
+    "OpenClaw",
+    "OpenClaw 社区",
+    "AI Agent",
+    "自动化工作流",
+    "Next.js",
+    "Prisma",
+  ],
 };
 
 export default function RootLayout({

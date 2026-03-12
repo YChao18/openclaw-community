@@ -3,8 +3,9 @@ import Link from "next/link";
 import { ArrowLeft, MessageSquareText, PenSquare } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/auth";
-import { AuthNotice } from "@/components/community/auth-notice";
 import { CommentForm } from "@/components/community/comment-form";
+import { PostEngagementBar } from "@/components/community/post-engagement-bar";
+import { PostViewTracker } from "@/components/community/post-view-tracker";
 import {
   formatPostDate,
   getAuthorDisplayName,
@@ -32,8 +33,8 @@ export async function generateMetadata({
     }
 
     return {
-      title: post.title,
       description: post.excerpt ?? `${post.title} - OpenClaw 社区帖子详情`,
+      title: post.title,
     };
   } catch {
     return {
@@ -45,7 +46,7 @@ export async function generateMetadata({
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { slug } = await params;
   const user = await getCurrentUser();
-  const result = await loadPostDetail(slug);
+  const result = await loadPostDetail(slug, user?.id);
 
   if (!result.isDatabaseReady) {
     return (
@@ -74,6 +75,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+      <PostViewTracker postId={post.id} />
+
       <div>
         <Link
           href="/posts"
@@ -119,6 +122,16 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             {post._count.comments} 条评论
           </span>
         </div>
+
+        <PostEngagementBar
+          favoritesCount={post.favoritesCount}
+          isAuthenticated={Boolean(user)}
+          likesCount={post.likesCount}
+          postId={post.id}
+          postSlug={post.slug}
+          viewCount={post.viewCount}
+          viewerState={post.viewerState}
+        />
 
         <div className="mt-8 rounded-[1.75rem] border border-default bg-overlay-strong px-5 py-6">
           <div className="whitespace-pre-wrap text-base leading-8 text-primary">
@@ -190,14 +203,25 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           </section>
 
           {!user ? (
-            <AuthNotice
-              title="登录后参与讨论"
-              message="你可以先完成邮箱验证码登录，再回来补充评论。"
-              actionHref={`/login?redirect=${encodeURIComponent(
-                `/posts/${post.slug}#comments`,
-              )}`}
-              actionLabel="去登录 / 注册"
-            />
+            <section className="rounded-[1.75rem] border border-default bg-surface p-6">
+              <div className="flex items-center gap-3 text-brand-yellow">
+                <PenSquare className="h-5 w-5" />
+                <p className="text-sm font-medium tracking-[0.2em] uppercase">
+                  登录后参与讨论
+                </p>
+              </div>
+              <p className="mt-4 text-sm leading-7 text-secondary">
+                你可以先完成邮箱验证码登录，再回来补充评论、点赞或收藏这篇帖子。
+              </p>
+              <Link
+                href={`/login?redirect=${encodeURIComponent(
+                  `/posts/${post.slug}#comments`,
+                )}`}
+                className="mt-5 inline-flex rounded-full border border-default bg-surface px-4 py-2 text-sm text-primary transition hover:bg-interactive-muted-hover"
+              >
+                去登录 / 注册
+              </Link>
+            </section>
           ) : (
             <section className="rounded-[1.75rem] border border-default bg-surface p-6">
               <CommentForm postId={post.id} postSlug={post.slug} />
@@ -209,9 +233,9 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   );
 }
 
-async function loadPostDetail(slug: string) {
+async function loadPostDetail(slug: string, viewerId?: string) {
   try {
-    const post = await getPostBySlug(slug);
+    const post = await getPostBySlug(slug, viewerId);
 
     return {
       isDatabaseReady: true,

@@ -1,77 +1,13 @@
-import type { LucideIcon } from "lucide-react";
-import { Blocks, Bot, Building2 } from "lucide-react";
-
-type Track = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-};
-
-type ChecklistItem = {
-  title: string;
-  description: string;
-};
-
-type PreviewItem = {
-  label: string;
-  hint: string;
-};
-
 export const siteConfig = {
   name: "碳硅合创·龙虾塘",
   shortName: "龙虾塘",
   subtitle: "The OpenClaw Community",
   description:
-    "面向 OpenClaw 用户的开发者社区，连接经验分享、问题解答、技能交流与资源互助。",
+    "OpenClaw 使用者社区，分享 Agent 实践、讨论自动化工作流，并沉淀真实落地案例。",
 };
 
 export const navigation = [
   { label: "帖子", href: "/posts" },
   { label: "标签", href: "/tags" },
-  { label: "发布", href: "/posts/new" },
-];
-
-export const communityTracks: Track[] = [
-  {
-    title: "开发实践",
-    description:
-      "围绕 SDK、Agent、模型接入、调试排障与部署流程，沉淀可复用的开发经验。",
-    icon: Blocks,
-  },
-  {
-    title: "AI 应用落地",
-    description:
-      "聚焦工作流设计、Prompt、评测方法、场景打磨与产品化实践。",
-    icon: Bot,
-  },
-  {
-    title: "企业共建",
-    description:
-      "服务 PoC 验证、知识库建设、流程改造与组织协同等真实落地需求。",
-    icon: Building2,
-  },
-];
-
-export const launchChecklist: ChecklistItem[] = [
-  {
-    title: "工程底座已就绪",
-    description:
-      "Next.js、TypeScript、Tailwind CSS、ESLint、Prettier 与基础目录结构均已落地。",
-  },
-  {
-    title: "数据库与社区模型已接通",
-    description:
-      "Prisma、PostgreSQL 与社区内容模型已经完成首版集成，可继续迭代功能。",
-  },
-  {
-    title: "M2 登录体系已上线",
-    description:
-      "邮箱验证码登录、数据库 session、顶部导航登录态与社区权限控制已经接入。",
-  },
-];
-
-export const activityPreview: PreviewItem[] = [
-  { label: "经验分享", hint: "沉淀真实项目方法" },
-  { label: "问题解答", hint: "提升排障效率" },
-  { label: "资源互助", hint: "促进协作共建" },
+  { label: "关于", href: "/about" },
 ];

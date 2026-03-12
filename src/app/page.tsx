@@ -1,134 +1,233 @@
 import Link from "next/link";
 import {
-  ArrowRight,
-  Blocks,
+  BookOpenText,
   Bot,
-  Building2,
-  CircleHelp,
-  DatabaseZap,
   MessagesSquare,
-  ShieldCheck,
   Sparkles,
+  Tags,
+  Workflow,
 } from "lucide-react";
+import { CommunityHero } from "@/components/community/community-hero";
 import {
-  activityPreview,
-  communityTracks,
-  launchChecklist,
-  siteConfig,
-} from "@/config/site";
+  HomePostSection,
+  HomeTagSection,
+} from "@/components/community/community-home-sections";
+import {
+  getCommunitySnapshot,
+  getPostFeed,
+  getTagFacets,
+  type PostFeedItem,
+} from "@/lib/community";
 
-export default function Home() {
+const communityIntro = [
+  {
+    title: "开发实战",
+    description:
+      "围绕 OpenClaw 接入、Agent 调试与多步任务协作，沉淀能直接复用的实战经验。",
+    icon: Bot,
+  },
+  {
+    title: "工作流落地",
+    description:
+      "聚焦自动化编排、工具协作、流程拆解与评测方法，把工作流从想法推进到可运行。",
+    icon: Workflow,
+  },
+  {
+    title: "案例共建",
+    description:
+      "让真实项目复盘、提问和优化建议沉淀下来，帮助更多实践者更快迭代自己的方案。",
+    icon: BookOpenText,
+  },
+];
+
+const supportedCapabilities = ["发帖", "评论", "点赞", "收藏"];
+
+export default async function Home() {
+  const result = await loadHomePageData();
+  const latestPosts = result.posts.slice(0, 6);
+  const hotPosts = getHotPosts(result.posts);
+  const tags = [...result.tags]
+    .sort(
+      (left, right) =>
+        right.postCount - left.postCount || left.name.localeCompare(right.name),
+    )
+    .slice(0, 8);
+  const statusItems = [
+    {
+      label: "最新帖子",
+      value: latestPosts[0]?.title ?? "等待第一篇新帖子",
+      hint: latestPosts[0]
+        ? `来自 ${latestPosts[0].author.name ?? latestPosts[0].author.username ?? "社区作者"}`
+        : "登录后即可发布经验",
+      icon: MessagesSquare,
+    },
+    {
+      label: "热门标签",
+      value:
+        tags
+          .slice(0, 3)
+          .map((tag) => tag.name)
+          .join(" / ") || "标签准备中",
+      hint:
+        tags.length > 0
+          ? `当前共 ${result.snapshot.tagCount} 个活跃标签`
+          : "按主题组织讨论",
+      icon: Tags,
+    },
+    {
+      label: "已开放功能",
+      value: supportedCapabilities.join(" / "),
+      hint: "围绕内容发布与互动的核心链路已稳定开放",
+      icon: Sparkles,
+    },
+    {
+      label: "社区定位",
+      value: "OpenClaw 使用者社区",
+      hint: "面向开发者、Agent 构建者与自动化工作流实践者",
+      icon: Bot,
+    },
+  ];
+
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-14 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
-      <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="bg-surface border-default rounded-[2rem] border p-8 shadow-[0_24px_60px_var(--shadow-card)] backdrop-blur md:p-10">
-          <div className="bg-brand-yellow-soft text-brand-yellow border-brand-yellow/30 mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
-            <Sparkles className="h-4 w-4" />
-            M0 基础版本已就绪
-          </div>
-          <div className="space-y-5">
-            <p className="text-secondary text-sm tracking-[0.28em] uppercase">
-              {siteConfig.subtitle}
-            </p>
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-              {siteConfig.name}
-            </h1>
-            <p className="text-secondary max-w-2xl text-base leading-8 md:text-lg">
-              一个面向 OpenClaw 用户的垂直交流社区，服务开发者、AI
-              应用者和企业实践者。首版优先完成上线所需的工程底座，为经验分享、
-              问题解答、技能交流、资源互助和生态共建预留稳定扩展空间。
-            </p>
-          </div>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="#launch"
-              className="bg-brand-yellow text-background hover:bg-brand-yellow/90 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 font-medium hover:translate-y-[-1px]"
-            >
-              查看首版能力
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="#tracks"
-              className="bg-interactive-muted text-primary border-default hover:bg-interactive-muted-hover inline-flex items-center justify-center rounded-full border px-5 py-3 font-medium"
-            >
-              了解社区定位
-            </Link>
-          </div>
-          <div className="mt-8 grid gap-3 md:grid-cols-3">
-            {activityPreview.map((item) => (
-              <div
-                key={item.label}
-                className="bg-surface-strong border-default rounded-2xl border p-4"
-              >
-                <p className="text-secondary text-sm">{item.hint}</p>
-                <p className="mt-2 text-lg font-semibold">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-24 px-6 py-12 md:px-8 lg:px-12 lg:py-20">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <CommunityHero />
 
-        <div className="space-y-5">
-          <div className="bg-surface border-default rounded-[2rem] border p-6 backdrop-blur">
-            <div className="text-brand-yellow flex items-center gap-3">
-              <DatabaseZap className="h-5 w-5" />
-              <p className="text-sm font-medium tracking-[0.2em] uppercase">
-                M0 范围
-              </p>
-            </div>
-            <ul className="mt-5 space-y-4">
-              {launchChecklist.map((item) => (
-                <li
-                  key={item.title}
-                  className="bg-overlay-strong border-default rounded-2xl border p-4"
-                >
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-secondary mt-2 text-sm leading-7">
-                    {item.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="border-default from-brand-lobster-soft via-brand-yellow-soft rounded-[2rem] border bg-linear-to-br to-transparent p-6">
-            <div className="text-brand-lobster flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5" />
-              <p className="text-sm font-medium tracking-[0.2em] uppercase">
-                当前状态
-              </p>
-            </div>
-            <p className="text-secondary mt-4 text-sm leading-7">
-              首页静态框架、认证基础接线、数据库接入与 Docker 部署配置已经就绪。
-              下一阶段建议聚焦内容发布、帖子列表、问答流与基础权限边界。
+        <div className="grid w-full auto-rows-fr gap-4 lg:grid-cols-3">
+          <article className="border-default dark:bg-surface h-full rounded-[1.75rem] border bg-white/70 p-6 shadow-[0_14px_36px_var(--shadow-card)] backdrop-blur-sm">
+            <p className="text-secondary text-sm tracking-[0.24em] uppercase">
+              最新帖子数
             </p>
-          </div>
+            <p className="text-primary mt-3 text-4xl font-semibold tracking-tight">
+              {result.snapshot.postCount}
+            </p>
+            <p className="text-secondary mt-2 text-sm leading-7">
+              基于现有帖子数据展示社区已经沉淀下来的内容总量。
+            </p>
+          </article>
+
+          <article className="border-default dark:bg-surface h-full rounded-[1.75rem] border bg-white/70 p-6 shadow-[0_14px_36px_var(--shadow-card)] backdrop-blur-sm">
+            <p className="text-secondary text-sm tracking-[0.24em] uppercase">
+              活跃标签数
+            </p>
+            <p className="text-primary mt-3 text-4xl font-semibold tracking-tight">
+              {result.snapshot.tagCount}
+            </p>
+            <p className="text-secondary mt-2 text-sm leading-7">
+              从主题切入内容发现，帮助帖子、问题和案例更快被找到。
+            </p>
+          </article>
+
+          <article className="border-default from-brand-yellow-soft to-brand-lobster-soft dark:via-surface h-full rounded-[1.75rem] border bg-linear-to-br via-white/80 p-6 shadow-[0_14px_36px_var(--shadow-card)] backdrop-blur-sm">
+            <p className="text-secondary text-sm tracking-[0.24em] uppercase">
+              今日新增讨论
+            </p>
+            <p className="text-primary mt-3 text-4xl font-semibold tracking-tight">
+              {result.todayCount}
+            </p>
+            <p className="text-secondary mt-2 text-sm leading-7">
+              已支持 {supportedCapabilities.join(" / ")}
+              ，讨论链路可直接开始使用。
+            </p>
+          </article>
         </div>
       </section>
 
-      <section id="tracks" className="space-y-5">
-        <div className="max-w-2xl space-y-3">
-          <p className="text-secondary text-sm tracking-[0.28em] uppercase">
-            社区定位
-          </p>
-          <h2 className="text-3xl font-semibold tracking-tight">
-            服务 OpenClaw 生态中的三类核心参与者
-          </h2>
+      <section className="border-default dark:bg-surface overflow-hidden rounded-[1.75rem] border bg-white/70 px-5 py-4 shadow-[0_10px_30px_var(--shadow-card)] backdrop-blur-sm">
+        <div className="grid gap-4 lg:grid-cols-4">
+          {statusItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.label}
+                className="flex items-start gap-3 rounded-2xl px-1 py-2"
+              >
+                <div className="border-brand-yellow/20 bg-brand-yellow-soft text-brand-yellow mt-0.5 rounded-2xl border p-2">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-secondary text-xs tracking-[0.24em] uppercase">
+                    {item.label}
+                  </p>
+                  <p className="text-primary mt-1 text-sm font-medium md:text-base">
+                    {item.value}
+                  </p>
+                  <p className="text-secondary mt-1 text-sm">{item.hint}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </section>
+
+      <HomePostSection
+        eyebrow="本周热门讨论"
+        title="最近一周里最值得跟进的帖子"
+        description="按点赞、收藏、评论和浏览量的综合热度近似排序，不新增后端查询，直接复用现有 feed 数据。"
+        posts={hotPosts}
+        isDatabaseReady={result.isDatabaseReady}
+        emptyTitle="本周热门讨论还在形成中"
+        emptyDescription="随着更多帖子和互动出现，这里会优先展示最近一周被社区持续讨论的内容。"
+        moreHref="/posts"
+        moreLabel="查看全部讨论"
+        sectionTone="featured"
+        cardTone="featured"
+        columns="3"
+      />
+
+      <HomePostSection
+        eyebrow="最新发布"
+        title="刚发布的经验、问题与复盘"
+        description="按时间顺序保持内容流动感，让用户可以快速追踪社区此刻正在更新什么。"
+        posts={latestPosts}
+        isDatabaseReady={result.isDatabaseReady}
+        emptyTitle="最新发布暂时为空"
+        emptyDescription="登录后发布第一篇帖子，或者稍后回来查看社区刚刚更新的讨论。"
+        moreHref="/posts"
+        moreLabel="进入帖子列表"
+        sectionTone="minimal"
+        cardTone="minimal"
+        columns="2"
+      />
+
+      <HomeTagSection
+        id="topics"
+        tags={tags}
+        isDatabaseReady={result.isDatabaseReady}
+      />
+
+      <section className="space-y-8">
+        <div className="max-w-3xl space-y-3">
+          <p className="text-secondary text-sm tracking-[0.28em] uppercase">
+            社区价值区
+          </p>
+          <h2 className="text-primary text-3xl font-semibold tracking-tight md:text-4xl">
+            面向真实社区使用场景，而不是工程自述
+          </h2>
+          <p className="text-secondary text-sm leading-8 md:text-base">
+            龙虾塘首页现在优先服务内容发现、问题讨论与案例沉淀。原本偏工程阶段说明的内容已经迁移到
+            About 页面，这里只保留用户真正关心的社区价值。
+          </p>
+        </div>
+
         <div className="grid gap-5 lg:grid-cols-3">
-          {communityTracks.map((track) => {
-            const Icon = track.icon;
+          {communityIntro.map((item) => {
+            const Icon = item.icon;
 
             return (
               <article
-                key={track.title}
-                className="bg-surface border-default rounded-[1.75rem] border p-6 backdrop-blur"
+                key={item.title}
+                className="border-default dark:bg-surface rounded-[1.75rem] border bg-white/70 p-7 shadow-[0_14px_36px_var(--shadow-card)] backdrop-blur-sm"
               >
-                <div className="bg-brand-yellow-soft text-brand-yellow border-brand-yellow/20 inline-flex rounded-2xl border p-3">
+                <div className="border-brand-yellow/20 bg-brand-yellow-soft text-brand-yellow inline-flex rounded-2xl border p-3">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-5 text-xl font-semibold">{track.title}</h3>
+                <h3 className="text-primary mt-5 text-xl font-semibold">
+                  {item.title}
+                </h3>
                 <p className="text-secondary mt-3 text-sm leading-7">
-                  {track.description}
+                  {item.description}
                 </p>
               </article>
             );
@@ -136,70 +235,112 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="launch" className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="bg-surface border-default rounded-[2rem] border p-6">
-          <p className="text-secondary text-sm tracking-[0.28em] uppercase">
-            首版方向
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-            用最小可上线范围，先把社区骨架搭稳
-          </h2>
-          <p className="text-secondary mt-4 text-sm leading-7">
-            M0
-            不追求功能过多，而是先把工程基座、品牌表达、数据库接线与鉴权基础打牢，
-            保证后续进入 M1 时可以围绕内容系统快速推进。
-          </p>
-        </div>
+      <section className="border-default dark:bg-surface relative overflow-hidden rounded-[2rem] border bg-white/75 px-8 py-10 shadow-[0_18px_48px_var(--shadow-card)] backdrop-blur-sm md:px-12 md:py-14">
+        <div className="bg-brand-yellow-soft absolute top-0 left-10 h-24 w-48 rounded-full blur-3xl" />
+        <div className="bg-brand-lobster-soft absolute right-8 bottom-0 h-24 w-40 rounded-full blur-3xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <p className="text-secondary text-sm tracking-[0.28em] uppercase">
+              CTA
+            </p>
+            <h2 className="text-primary text-3xl font-semibold tracking-tight md:text-4xl">
+              让更多人看到你的 OpenClaw 实践
+            </h2>
+            <p className="text-secondary text-sm leading-8 md:text-base">
+              发布你的案例、问题或工作流，让更多开发者一起完善它。
+            </p>
+          </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          <article className="bg-surface border-default rounded-[1.75rem] border p-5">
-            <Blocks className="text-brand-yellow h-5 w-5" />
-            <h3 className="mt-4 text-lg font-semibold">工程基座</h3>
-            <p className="text-secondary mt-2 text-sm leading-7">
-              基于 Next.js App Router、TypeScript、Tailwind CSS、ESLint 与
-              Prettier 构建。
-            </p>
-          </article>
-          <article className="bg-surface border-default rounded-[1.75rem] border p-5">
-            <CircleHelp className="text-brand-yellow h-5 w-5" />
-            <h3 className="mt-4 text-lg font-semibold">用户体系准备</h3>
-            <p className="text-secondary mt-2 text-sm leading-7">
-              Auth.js、Prisma Adapter 与 PostgreSQL 数据模型已经就位。
-            </p>
-          </article>
-          <article className="bg-surface border-default rounded-[1.75rem] border p-5">
-            <MessagesSquare className="text-brand-lobster h-5 w-5" />
-            <h3 className="mt-4 text-lg font-semibold">社区表达</h3>
-            <p className="text-secondary mt-2 text-sm leading-7">
-              全局 Layout、导航、页脚、首页静态框架与主题模式已具备上线形态。
-            </p>
-          </article>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/posts/new"
+              className="bg-brand-yellow text-background hover:bg-brand-yellow/90 inline-flex items-center justify-center rounded-full px-6 py-3.5 font-medium hover:-translate-y-0.5"
+            >
+              去发帖
+            </Link>
+            <Link
+              href="/posts"
+              className="border-default text-primary dark:bg-interactive-muted dark:hover:bg-interactive-muted-hover inline-flex items-center justify-center rounded-full border bg-white/70 px-6 py-3.5 font-medium backdrop-blur-sm hover:bg-white/90"
+            >
+              浏览帖子
+            </Link>
+          </div>
         </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-3">
-        <article className="bg-surface border-default rounded-[1.75rem] border p-6">
-          <Bot className="text-brand-yellow h-5 w-5" />
-          <h3 className="mt-4 text-xl font-semibold">经验分享</h3>
-          <p className="text-secondary mt-3 text-sm leading-7">
-            聚焦 Agent、模型接入、Prompt、评测、工作流与部署实践。
-          </p>
-        </article>
-        <article className="bg-surface border-default rounded-[1.75rem] border p-6">
-          <CircleHelp className="text-brand-yellow h-5 w-5" />
-          <h3 className="mt-4 text-xl font-semibold">问题解答</h3>
-          <p className="text-secondary mt-3 text-sm leading-7">
-            用结构化问答帮助用户更快排障，并沉淀可复用的知识资产。
-          </p>
-        </article>
-        <article className="bg-surface border-default rounded-[1.75rem] border p-6">
-          <Building2 className="text-brand-lobster h-5 w-5" />
-          <h3 className="mt-4 text-xl font-semibold">生态共建</h3>
-          <p className="text-secondary mt-3 text-sm leading-7">
-            连接个人开发者、应用团队与企业实践者，共同沉淀资源、方法与案例。
-          </p>
-        </article>
       </section>
     </div>
+  );
+}
+
+async function loadHomePageData() {
+  try {
+    const [posts, tags, snapshot] = await Promise.all([
+      getPostFeed({ limit: 30 }),
+      getTagFacets(),
+      getCommunitySnapshot(),
+    ]);
+
+    return {
+      isDatabaseReady: true,
+      posts,
+      snapshot,
+      tags,
+      todayCount: posts.filter((post) => isSameDay(post.createdAt, new Date()))
+        .length,
+    };
+  } catch (error) {
+    console.error("Failed to load community homepage", error);
+
+    return {
+      isDatabaseReady: false,
+      posts: [],
+      snapshot: {
+        postCount: 0,
+        tagCount: 0,
+      },
+      tags: [],
+      todayCount: 0,
+    };
+  }
+}
+
+function getHotPosts(posts: PostFeedItem[]) {
+  const recentPosts = posts.filter((post) => isWithinDays(post.createdAt, 7));
+  const source = recentPosts.length > 0 ? recentPosts : posts;
+
+  return [...source]
+    .sort((left, right) => {
+      const scoreDiff = getTrendingScore(right) - getTrendingScore(left);
+
+      if (scoreDiff !== 0) {
+        return scoreDiff;
+      }
+
+      return right.createdAt.getTime() - left.createdAt.getTime();
+    })
+    .slice(0, 6);
+}
+
+function getTrendingScore(post: PostFeedItem) {
+  return (
+    post.likesCount * 4 +
+    post.favoritesCount * 3 +
+    post._count.comments * 2 +
+    post.viewCount * 0.05
+  );
+}
+
+function isWithinDays(date: Date, days: number) {
+  const threshold = new Date();
+  threshold.setHours(0, 0, 0, 0);
+  threshold.setDate(threshold.getDate() - days);
+
+  return date >= threshold;
+}
+
+function isSameDay(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
   );
 }

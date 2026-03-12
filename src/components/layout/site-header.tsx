@@ -6,7 +6,7 @@ import { navigation, siteConfig } from "@/config/site";
 export async function SiteHeader() {
   return (
     <header className="bg-background/75 border-default/70 sticky top-0 z-40 border-b backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 md:px-8 lg:px-12">
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 py-4 md:px-8 lg:px-12">
         <Link href="/" className="flex min-w-0 flex-col">
           <span className="truncate text-lg font-semibold tracking-tight">
             {siteConfig.name}

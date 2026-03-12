@@ -1,13 +1,23 @@
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-default/70">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-6 text-sm text-secondary md:px-8 lg:px-12">
-        <p className="font-medium text-primary">{siteConfig.name}</p>
-        <p>
-          基于 Next.js、Prisma、PostgreSQL 与 Auth.js 构建的 OpenClaw 用户社区。
-        </p>
+    <footer className="border-default/70 border-t">
+      <div className="text-secondary mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 text-sm md:px-8 lg:px-12">
+        <p className="text-primary font-medium">{siteConfig.name}</p>
+        <p>{siteConfig.description}</p>
+        <div className="flex flex-wrap gap-4">
+          <Link href="/posts" className="hover:text-primary">
+            浏览帖子
+          </Link>
+          <Link href="/tags" className="hover:text-primary">
+            浏览标签
+          </Link>
+          <Link href="/about" className="hover:text-primary">
+            项目介绍
+          </Link>
+        </div>
       </div>
     </footer>
   );

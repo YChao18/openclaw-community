@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LogOut, NotebookText, PlusCircle, UserRound } from "lucide-react";
+import {
+  Bookmark,
+  LogOut,
+  NotebookText,
+  PlusCircle,
+  UserRound,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireUser, signOut } from "@/auth";
 import { getUserDisplayName } from "@/lib/user/service";
 
 export const metadata: Metadata = {
-  title: "个人中心",
   description: "查看当前登录账号的基础资料与社区入口。",
+  title: "个人中心",
 };
 
 export default async function MePage() {
@@ -26,10 +32,7 @@ export default async function MePage() {
           <div className="mt-6 space-y-3 text-sm leading-7 text-secondary">
             <p>邮箱：{user.email ?? "未设置"}</p>
             <p>角色：{user.role}</p>
-            <p>
-              验证状态：
-              {user.emailVerified ? "邮箱已验证" : "待验证"}
-            </p>
+            <p>验证状态：{user.emailVerified ? "邮箱已验证" : "待验证"}</p>
           </div>
         </div>
 
@@ -54,13 +57,13 @@ export default async function MePage() {
               </p>
             </div>
             <p className="mt-4 text-sm leading-7 text-secondary">
-              进入“我的帖子”查看自己发布的内容，或继续发布新的讨论主题。
+              进入“我的帖子”查看自己发布的内容，或继续发布新的讨论主题，也可以在“我的收藏”里快速回到关心的帖子。
             </p>
           </article>
         </div>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-3">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href="/me/posts"
           className="rounded-[1.75rem] border border-default bg-surface p-6 transition hover:bg-interactive-muted-hover"
@@ -68,7 +71,18 @@ export default async function MePage() {
           <NotebookText className="h-5 w-5 text-brand-yellow" />
           <h2 className="mt-4 text-xl font-semibold text-primary">我的帖子</h2>
           <p className="mt-3 text-sm leading-7 text-secondary">
-            查看自己已发布的帖子列表。
+            查看自己已经发布的帖子列表。
+          </p>
+        </Link>
+
+        <Link
+          href="/me/favorites"
+          className="rounded-[1.75rem] border border-default bg-surface p-6 transition hover:bg-interactive-muted-hover"
+        >
+          <Bookmark className="h-5 w-5 text-brand-lobster" />
+          <h2 className="mt-4 text-xl font-semibold text-primary">我的收藏</h2>
+          <p className="mt-3 text-sm leading-7 text-secondary">
+            查看已经收藏过的帖子，快速回到想继续阅读或跟进的讨论。
           </p>
         </Link>
 

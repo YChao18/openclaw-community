@@ -8,11 +8,15 @@ import type {
   CommunityActionState,
 } from "@/app/posts/action-state";
 import {
-  createUniquePostSlug,
-  getPostExcerpt,
+  createCommunityComment,
+  createCommunityPost,
+  getTagOptions,
   type CommunityTagOption,
+  type PostFavoriteIntent,
+  type PostLikeIntent,
+  setPostFavoriteState,
+  setPostLikeState,
 } from "@/lib/community";
-import { prisma } from "@/lib/prisma";
 
 function normalizeTextEntry(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -28,6 +32,21 @@ function getTagIds(formData: FormData) {
 
 function getPostRedirectPath(slug: string) {
   return `/posts/${encodeURIComponent(slug)}`;
+}
+
+function revalidatePostInteractionPaths(postSlug: string) {
+  revalidatePath("/posts");
+  revalidatePath(getPostRedirectPath(postSlug));
+  revalidatePath("/me");
+  revalidatePath("/me/favorites");
+}
+
+function isLikeIntent(intent: string): intent is PostLikeIntent {
+  return intent === "like" || intent === "unlike";
+}
+
+function isFavoriteIntent(intent: string): intent is PostFavoriteIntent {
+  return intent === "save" || intent === "unsave";
 }
 
 function validatePostInput(input: {
@@ -76,27 +95,12 @@ export async function createPostAction(
     };
   }
 
-  const availableTags = await prisma.tag.findMany({
-    orderBy: {
-      name: "asc",
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  });
+  const availableTags = await getTagOptions();
   const title = normalizeTextEntry(formData.get("title"));
   const content = normalizeTextEntry(formData.get("content"));
   const selectedTagIds = getTagIds(formData);
   const errors = validatePostInput({
-    availableTags: availableTags.map((tag) => ({
-      description: null,
-      id: tag.id,
-      name: tag.name,
-      postCount: 0,
-      slug: tag.slug,
-    })),
+    availableTags,
     content,
     selectedTagIds,
     title,
@@ -109,24 +113,11 @@ export async function createPostAction(
     };
   }
 
-  const slug = await createUniquePostSlug(title);
-  const post = await prisma.post.create({
-    data: {
-      authorId: session.user.id,
-      content,
-      excerpt: getPostExcerpt(content),
-      publishedAt: new Date(),
-      slug,
-      tags: {
-        connect: selectedTagIds.map((id) => ({
-          id,
-        })),
-      },
-      title,
-    },
-    select: {
-      slug: true,
-    },
+  const post = await createCommunityPost({
+    authorId: session.user.id,
+    content,
+    tagIds: selectedTagIds,
+    title,
   });
 
   revalidatePath("/posts");
@@ -165,16 +156,112 @@ export async function createCommentAction(
     };
   }
 
-  await prisma.comment.create({
-    data: {
-      authorId: session.user.id,
-      content,
-      postId,
-    },
+  await createCommunityComment({
+    authorId: session.user.id,
+    content,
+    postId,
   });
 
-  revalidatePath(`/posts/${postSlug}`);
+  revalidatePath(getPostRedirectPath(postSlug));
   revalidatePath("/posts");
   revalidatePath("/me/posts");
   redirect(`${getPostRedirectPath(postSlug)}#comments`);
+}
+
+export async function setPostLikeAction(
+  _prevState: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const session = await auth();
+  const postId = normalizeTextEntry(formData.get("postId"));
+  const postSlug = normalizeTextEntry(formData.get("postSlug"));
+  const intent = normalizeTextEntry(formData.get("intent"));
+
+  if (!session?.user?.id) {
+    return {
+      message: "请先登录后再点赞帖子。",
+    };
+  }
+
+  if (!postId || !postSlug) {
+    return {
+      message: "帖子信息缺失，请刷新页面后重试。",
+    };
+  }
+
+  if (!isLikeIntent(intent)) {
+    return {
+      message: "点赞操作无效，请刷新后重试。",
+    };
+  }
+
+  const post = await setPostLikeState({
+    intent,
+    postId,
+    postSlug,
+    userId: session.user.id,
+  });
+
+  if (!post) {
+    return {
+      message: "帖子不存在或暂时不可操作。",
+    };
+  }
+
+  revalidatePostInteractionPaths(post.slug);
+
+  return {
+    message:
+      intent === "like" ? "已点赞这篇帖子。" : "已取消点赞，你仍可稍后再次点赞。",
+  };
+}
+
+export async function setPostFavoriteAction(
+  _prevState: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const session = await auth();
+  const postId = normalizeTextEntry(formData.get("postId"));
+  const postSlug = normalizeTextEntry(formData.get("postSlug"));
+  const intent = normalizeTextEntry(formData.get("intent"));
+
+  if (!session?.user?.id) {
+    return {
+      message: "请先登录后再收藏帖子。",
+    };
+  }
+
+  if (!postId || !postSlug) {
+    return {
+      message: "帖子信息缺失，请刷新页面后重试。",
+    };
+  }
+
+  if (!isFavoriteIntent(intent)) {
+    return {
+      message: "收藏操作无效，请刷新后重试。",
+    };
+  }
+
+  const post = await setPostFavoriteState({
+    intent,
+    postId,
+    postSlug,
+    userId: session.user.id,
+  });
+
+  if (!post) {
+    return {
+      message: "帖子不存在或暂时不可操作。",
+    };
+  }
+
+  revalidatePostInteractionPaths(post.slug);
+
+  return {
+    message:
+      intent === "save"
+        ? "已收藏这篇帖子。"
+        : "已取消收藏，这篇帖子将从我的收藏中移除。",
+  };
 }
