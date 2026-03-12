@@ -7,6 +7,7 @@ export const siteConfig = {
 };
 
 export const navigation = [
+  { label: "主页", href: "/" },
   { label: "帖子", href: "/posts" },
   { label: "标签", href: "/tags" },
   { label: "关于", href: "/about" },

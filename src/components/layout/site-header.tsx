@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { HeaderNav } from "@/components/layout/header-nav";
 import { AuthAccess } from "@/components/ui/auth-access";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { navigation, siteConfig } from "@/config/site";
+import { siteConfig } from "@/config/site";
 
 export async function SiteHeader() {
   return (
@@ -17,17 +18,7 @@ export async function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <nav className="bg-surface border-default hidden items-center gap-1 rounded-full border px-2 py-1 md:flex">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-secondary hover:text-primary hover:bg-interactive-muted-hover rounded-full px-3 py-2 text-sm"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <HeaderNav />
           <ThemeToggle />
           <AuthAccess />
         </div>
