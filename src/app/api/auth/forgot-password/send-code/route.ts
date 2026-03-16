@@ -3,14 +3,14 @@ import { authError, authSuccess } from "@/lib/auth/api-response";
 import { isValidEmailAddress } from "@/lib/auth/email-address";
 import { getRequestIp } from "@/lib/auth/request";
 import { parseJsonBody } from "@/lib/auth/route";
-import { issueRegistrationCode } from "@/lib/auth/verification-code";
+import { issueForgotPasswordCode } from "@/lib/auth/verification-code";
 
-type SendCodeBody = {
+type ForgotPasswordSendCodeBody = {
   email?: string;
 };
 
 export async function POST(request: NextRequest) {
-  const body = await parseJsonBody<SendCodeBody>(request);
+  const body = await parseJsonBody<ForgotPasswordSendCodeBody>(request);
 
   if (!body) {
     return authError(400, {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const result = await issueRegistrationCode({
+  const result = await issueForgotPasswordCode({
     email: body.email ?? "",
     sendIp: getRequestIp(request),
   });
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   return authSuccess({
     deliveryMode: result.deliveryMode,
-    message: "验证码已发送，请前往邮箱查收。",
+    message: "如果该邮箱可用，我们已发送重置验证码。",
     retryAfterSeconds: result.retryAfterSeconds,
   });
 }

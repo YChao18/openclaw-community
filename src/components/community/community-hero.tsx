@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/utils";
 import styles from "./community-hero.module.css";
 
@@ -12,8 +13,7 @@ export function CommunityHero({ className }: CommunityHeroProps) {
     <section className={cn(styles.heroShell, className)}>
       <div className={styles.heroLayout}>
         <div className={styles.heroInner}>
-          <h1 className={styles.brandTitle}>碳硅合创·龙虾塘</h1>
-          <p className={styles.englishSubtitle}>THE OPENCLAW COMMUNITY</p>
+          <Brand variant="hero" className={styles.brandBlock} />
           <h2 className={styles.communityTitle}>OpenClaw 使用者社区</h2>
           <p className={styles.description}>
             分享 Agent 实战经验，讨论自动化工作流，沉淀真实可复用的落地案例。
@@ -33,7 +33,15 @@ export function CommunityHero({ className }: CommunityHeroProps) {
           </div>
         </div>
 
-        <div className={styles.heroSpacer} aria-hidden="true" />
+        <div className={styles.heroAccent} aria-hidden="true">
+          <div className={styles.accentOrb} />
+          <div className={styles.accentPanel}>
+            <p className={styles.accentEyebrow}>Community</p>
+            <p className={styles.accentCopy}>
+              面向真实实践者的 OpenClaw 讨论空间，沉淀案例、问题和工作流经验。
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );

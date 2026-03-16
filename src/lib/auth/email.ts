@@ -1,4 +1,12 @@
-export type EmailDeliveryMode = "fallback" | "resend";
+import nodemailer from "nodemailer";
+import {
+  getEmailFrom,
+  getEmailProvider,
+  isEmailDevFallbackEnabled,
+  type EmailProvider,
+} from "@/lib/auth/config";
+
+export type EmailDeliveryMode = EmailProvider | "fallback";
 
 type SendEmailInput = {
   html: string;
@@ -7,20 +15,61 @@ type SendEmailInput = {
   to: string;
 };
 
-async function sendWithResend(input: SendEmailInput): Promise<EmailDeliveryMode> {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+let smtpTransporter: nodemailer.Transporter | null = null;
+
+function getResendApiKey() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("Missing RESEND_API_KEY for EMAIL_PROVIDER=resend.");
+  }
+
+  return process.env.RESEND_API_KEY;
+}
+
+function getSmtpTransporter() {
+  if (smtpTransporter) {
+    return smtpTransporter;
+  }
+
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !port || !user || !pass) {
+    throw new Error(
+      "Missing SMTP_HOST, SMTP_PORT, SMTP_USER or SMTP_PASS for EMAIL_PROVIDER=smtp.",
+    );
+  }
+
+  smtpTransporter = nodemailer.createTransport({
+    auth: {
+      pass,
+      user,
     },
+    host,
+    port: Number(port),
+    secure: process.env.SMTP_SECURE === "true" || Number(port) === 465,
+  });
+
+  return smtpTransporter;
+}
+
+async function sendWithResend(
+  input: SendEmailInput,
+): Promise<EmailDeliveryMode> {
+  const response = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
-      from: process.env.MAIL_FROM,
+      from: getEmailFrom(),
       html: input.html,
       subject: input.subject,
       text: input.text,
       to: [input.to],
     }),
+    headers: {
+      Authorization: `Bearer ${getResendApiKey()}`,
+      "Content-Type": "application/json",
+    },
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -30,12 +79,33 @@ async function sendWithResend(input: SendEmailInput): Promise<EmailDeliveryMode>
   return "resend";
 }
 
-async function sendWithConsole(input: SendEmailInput): Promise<EmailDeliveryMode> {
-  console.info("[auth-email:fallback] 当前为开发模式，验证码已输出到服务端日志，不代表真实邮件已发送。", {
+async function sendWithSmtp(input: SendEmailInput): Promise<EmailDeliveryMode> {
+  const transporter = getSmtpTransporter();
+
+  await transporter.sendMail({
+    from: getEmailFrom(),
+    html: input.html,
     subject: input.subject,
     text: input.text,
     to: input.to,
   });
+
+  return "smtp";
+}
+
+async function sendWithFallback(
+  input: SendEmailInput,
+  error: Error,
+): Promise<EmailDeliveryMode> {
+  console.warn(
+    "[auth-email:fallback] Development fallback delivered email payload to logs.",
+    {
+      error: error.message,
+      subject: input.subject,
+      text: input.text,
+      to: input.to,
+    },
+  );
 
   return "fallback";
 }
@@ -43,13 +113,19 @@ async function sendWithConsole(input: SendEmailInput): Promise<EmailDeliveryMode
 export async function sendEmail(
   input: SendEmailInput,
 ): Promise<EmailDeliveryMode> {
-  if (process.env.RESEND_API_KEY && process.env.MAIL_FROM) {
-    return sendWithResend(input);
-  }
+  try {
+    const provider = getEmailProvider();
 
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Missing RESEND_API_KEY or MAIL_FROM.");
-  }
+    if (provider === "resend") {
+      return await sendWithResend(input);
+    }
 
-  return sendWithConsole(input);
+    return await sendWithSmtp(input);
+  } catch (error) {
+    if (error instanceof Error && isEmailDevFallbackEnabled()) {
+      return sendWithFallback(input, error);
+    }
+
+    throw error;
+  }
 }

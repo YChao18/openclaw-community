@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 function methodNotAvailable() {
   return NextResponse.json(
     {
-      message: "该认证入口已停用，请使用邮箱验证码登录。",
+      message: "该认证入口已停用，请使用邮箱密码登录或正式注册流程。",
       ok: false,
     },
     { status: 404 },

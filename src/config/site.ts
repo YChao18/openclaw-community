@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "碳硅合创·龙虾塘",
   shortName: "龙虾塘",
-  subtitle: "The OpenClaw Community",
+  subtitle: "THE OPENCLAW COMMUNITY",
   description:
     "OpenClaw 使用者社区，分享 Agent 实践、讨论自动化工作流，并沉淀真实落地案例。",
 };

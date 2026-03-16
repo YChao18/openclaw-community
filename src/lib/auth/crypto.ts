@@ -21,7 +21,17 @@ export function generateSessionToken() {
   return randomBytes(32).toString("base64url");
 }
 
+export function generateOneTimeToken() {
+  return randomBytes(32).toString("base64url");
+}
+
 export function hashSessionToken(token: string) {
+  return createHash("sha256")
+    .update(`${token}:${getAuthSecret()}`)
+    .digest("hex");
+}
+
+export function hashOneTimeToken(token: string) {
   return createHash("sha256")
     .update(`${token}:${getAuthSecret()}`)
     .digest("hex");

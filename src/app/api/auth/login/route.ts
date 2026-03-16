@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 import { authError, authSuccess } from "@/lib/auth/api-response";
+import { createSession } from "@/lib/auth/session";
 import { parseJsonBody } from "@/lib/auth/route";
-import { verifyRegistrationCode } from "@/lib/auth/verification-code";
+import { loginWithEmailPassword } from "@/lib/auth/verification-code";
 
-type VerifyCodeBody = {
-  code?: string;
+type LoginBody = {
   email?: string;
+  password?: string;
 };
 
 export async function POST(request: NextRequest) {
-  const body = await parseJsonBody<VerifyCodeBody>(request);
+  const body = await parseJsonBody<LoginBody>(request);
 
   if (!body) {
     return authError(400, {
@@ -18,18 +19,18 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const result = await verifyRegistrationCode({
-    code: body.code ?? "",
+  const result = await loginWithEmailPassword({
     email: body.email ?? "",
+    password: body.password ?? "",
   });
 
   if (!result.ok) {
     return authError(400, result);
   }
 
+  await createSession(result.userId);
+
   return authSuccess({
-    actionToken: result.actionToken,
-    actionTokenExpiresAt: result.actionTokenExpiresAt.toISOString(),
-    message: "邮箱验证成功，请设置登录密码。",
+    message: "登录成功，正在进入社区。",
   });
 }

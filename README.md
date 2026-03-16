@@ -1,14 +1,23 @@
-# 碳硅合创·龙虾塘
+# OpenClaw Community
 
-The OpenClaw Community 的社区项目，当前已完成 M1 社区基础能力，并在 M2 接入邮箱验证码登录、数据库 session、个人中心以及社区权限控制。
+OpenClaw Community 是一个基于 `Next.js 16 + App Router + Prisma + PostgreSQL` 的社区项目。
+
+当前仓库已经内置正式可用的邮箱认证流程：
+
+- 注册：邮箱验证码验证后设置密码并自动登录
+- 登录：邮箱 + 密码
+- 找回密码：邮箱验证码验证后重置密码
+- 会话：自定义安全 Cookie Session
 
 ## 技术栈
 
-- Next.js 16 + App Router + TypeScript
+- Next.js 16
+- React 19
 - Tailwind CSS 4
-- PostgreSQL + Prisma
-- 自建邮箱验证码登录 + 数据库 Session
-- Docker / Docker Compose
+- Prisma
+- PostgreSQL
+- bcryptjs
+- Resend / SMTP
 
 ## 本地启动
 
@@ -24,16 +33,16 @@ npm install
 copy .env.example .env
 ```
 
-3. 启动 PostgreSQL
+3. 启动数据库
 
 ```bash
 docker compose up -d postgres
 ```
 
-4. 执行 Prisma migration
+4. 执行迁移
 
 ```bash
-npm run db:migrate -- --name m2_email_auth
+npm run db:migrate -- --name m4_password_email_auth
 ```
 
 5. 启动开发环境
@@ -44,39 +53,46 @@ npm run dev
 
 访问 [http://localhost:3000](http://localhost:3000)。
 
-## 邮箱验证码登录配置
+## 认证相关路由
 
-默认邮件服务为 Resend，代码结构已预留替换空间。
+- `/register`
+- `/login`
+- `/forgot-password`
 
-- `RESEND_API_KEY`: Resend API Key
-- `MAIL_FROM`: 发件人地址，例如 `OpenClaw <onboarding@resend.dev>`
-- `AUTH_SECRET`: 登录验证码哈希与 session token 哈希使用的密钥
-- `SESSION_SECRET`: 可选，若设置则优先于 `AUTH_SECRET`
-- `APP_URL` / `NEXT_PUBLIC_APP_URL`: 应用访问地址
+## 认证接口
 
-开发环境下如果没有配置 `RESEND_API_KEY` 或 `MAIL_FROM`，系统会退回到控制台输出验证码，方便本地联调。
+- `POST /api/auth/send-code`
+- `POST /api/auth/verify-code`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/forgot-password/send-code`
+- `POST /api/auth/forgot-password/verify-code`
+- `POST /api/auth/reset-password`
 
-## M2 功能范围
+## 邮件配置
 
-- `/login`: 邮箱 + 6 位验证码登录 / 注册
-- `/me`: 个人中心
-- `/me/posts`: 我的帖子
-- `POST /api/auth/send-code`: 发送验证码
-- `POST /api/auth/verify-code`: 校验验证码并建立会话
-- 顶部导航登录态
-- 登录后发帖与评论
-- 退出登录
+默认推荐 `Resend`，也支持 `SMTP`。
 
-## 本地测试步骤
+关键环境变量：
 
-1. 启动数据库并执行 migration。
-2. 运行 `npm run dev`。
-3. 打开 `/login`，输入邮箱并发送验证码。
-4. 如果未配置 Resend，到终端中查看 fallback 打印出的验证码。
-5. 输入验证码完成登录。
-6. 访问 `/posts/new` 发布帖子。
-7. 打开任意帖子详情页发表评论。
-8. 访问 `/me` 和 `/me/posts` 检查登录态与个人内容。
+- `EMAIL_PROVIDER`
+- `EMAIL_FROM`
+- `RESEND_API_KEY`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_SECURE`
+- `EMAIL_ALLOW_DEV_FALLBACK`
+- `AUTH_SECRET`
+- `APP_URL`
+
+说明：
+
+- `EMAIL_PROVIDER=resend` 时需要配置 `RESEND_API_KEY`
+- `EMAIL_PROVIDER=smtp` 时需要配置 SMTP 参数
+- 生产环境缺少邮件配置会直接报错
+- 开发环境只有在 `EMAIL_ALLOW_DEV_FALLBACK=true` 时才允许回退到控制台输出
 
 ## 常用命令
 
@@ -85,6 +101,6 @@ npm run dev
 npm run lint
 npm run build
 npm run db:generate
-npm run db:migrate -- --name m2_email_auth
+npm run db:migrate
 npm run db:studio
 ```

@@ -21,12 +21,15 @@ enum PostStatus {
 
 enum VerificationCodePurpose {
   LOGIN
+  REGISTER
+  RESET_PASSWORD
 }
 
 model User {
   id             String          @id @default(cuid())
   name           String?
   email          String?         @unique
+  passwordHash   String?         @db.VarChar(255)
   emailVerified  DateTime?
   image          String?
   username       String?         @unique
@@ -48,18 +51,18 @@ model User {
 }
 
 model Post {
-  id          String     @id @default(cuid())
-  title       String     @db.VarChar(160)
-  slug        String     @unique @db.VarChar(180)
-  excerpt     String?    @db.VarChar(280)
-  content     String     @db.Text
-  status      PostStatus @default(PUBLISHED)
+  id          String         @id @default(cuid())
+  title       String         @db.VarChar(160)
+  slug        String         @unique @db.VarChar(180)
+  excerpt     String?        @db.VarChar(280)
+  content     String         @db.Text
+  status      PostStatus     @default(PUBLISHED)
   authorId    String
-  viewCount   Int        @default(0)
+  viewCount   Int            @default(0)
   publishedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  author      User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments    Comment[]
   tags        Tag[]
   likes       PostLike[]
@@ -163,21 +166,25 @@ model Session {
 }
 
 model EmailVerificationCode {
-  id            String                  @id @default(cuid())
-  email         String                  @db.VarChar(320)
-  codeHash      String                  @db.VarChar(128)
-  purpose       VerificationCodePurpose @default(LOGIN)
-  expiresAt     DateTime
-  consumedAt    DateTime?
-  invalidatedAt DateTime?
-  attemptCount  Int                     @default(0)
-  sendIp        String?                 @db.VarChar(64)
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  id                     String                  @id @default(cuid())
+  email                  String                  @db.VarChar(320)
+  codeHash               String                  @db.VarChar(128)
+  purpose                VerificationCodePurpose @default(LOGIN)
+  expiresAt              DateTime
+  consumedAt             DateTime?
+  invalidatedAt          DateTime?
+  verifiedTokenHash      String?                 @db.VarChar(128)
+  verifiedTokenExpiresAt DateTime?
+  attemptCount           Int                     @default(0)
+  sendIp                 String?                 @db.VarChar(64)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 
   @@index([email, createdAt])
   @@index([email, expiresAt])
   @@index([email, consumedAt, invalidatedAt])
+  @@index([email, purpose, verifiedTokenExpiresAt])
+  @@index([verifiedTokenHash])
 }
 
 model VerificationToken {

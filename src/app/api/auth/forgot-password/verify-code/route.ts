@@ -1,15 +1,15 @@
 import { NextRequest } from "next/server";
 import { authError, authSuccess } from "@/lib/auth/api-response";
 import { parseJsonBody } from "@/lib/auth/route";
-import { verifyRegistrationCode } from "@/lib/auth/verification-code";
+import { verifyForgotPasswordCode } from "@/lib/auth/verification-code";
 
-type VerifyCodeBody = {
+type ForgotPasswordVerifyCodeBody = {
   code?: string;
   email?: string;
 };
 
 export async function POST(request: NextRequest) {
-  const body = await parseJsonBody<VerifyCodeBody>(request);
+  const body = await parseJsonBody<ForgotPasswordVerifyCodeBody>(request);
 
   if (!body) {
     return authError(400, {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const result = await verifyRegistrationCode({
+  const result = await verifyForgotPasswordCode({
     code: body.code ?? "",
     email: body.email ?? "",
   });
@@ -30,6 +30,6 @@ export async function POST(request: NextRequest) {
   return authSuccess({
     actionToken: result.actionToken,
     actionTokenExpiresAt: result.actionTokenExpiresAt.toISOString(),
-    message: "邮箱验证成功，请设置登录密码。",
+    message: "验证码验证成功，请设置新密码。",
   });
 }
