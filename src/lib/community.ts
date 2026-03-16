@@ -110,6 +110,24 @@ export type CommunityTagOption = {
   slug: string;
 };
 
+export type PostAttachmentItem = {
+  createdAt?: Date;
+  id: string;
+  mimeType: string;
+  originalName: string;
+  size: number;
+  storagePath: string;
+};
+
+export type EditablePost = {
+  attachments: PostAttachmentItem[];
+  content: string;
+  id: string;
+  slug: string;
+  tagIds: string[];
+  title: string;
+};
+
 export type PostLikeIntent = "like" | "unlike";
 
 export type PostFavoriteIntent = "save" | "unsave";
@@ -239,9 +257,11 @@ export async function getPostBySlug(slug: string, viewerId?: string) {
     return null;
   }
 
+  const attachments = await getPostAttachments(post.id);
   const viewerState = await getPostViewerState(post.id, viewerId);
 
   return {
+    attachments,
     ...withPostCounts(post),
     viewerState,
   };
@@ -316,6 +336,12 @@ export async function getPublishedPostIdentity(input: {
 }
 
 export async function createCommunityPost(input: {
+  attachments?: Array<{
+    mimeType: string;
+    originalName: string;
+    size: number;
+    storagePath: string;
+  }>;
   authorId: string;
   content: string;
   tagIds: string[];
@@ -326,6 +352,12 @@ export async function createCommunityPost(input: {
   return prisma.post.create({
     data: {
       authorId: input.authorId,
+      attachments:
+        input.attachments && input.attachments.length > 0
+          ? {
+              create: input.attachments,
+            }
+          : undefined,
       content: input.content,
       excerpt: getPostExcerpt(input.content),
       publishedAt: new Date(),
@@ -353,6 +385,105 @@ export async function createCommunityComment(input: {
       authorId: input.authorId,
       content: input.content,
       postId: input.postId,
+    },
+  });
+}
+
+export async function deleteCommunityComment(input: {
+  authorId: string;
+  commentId: string;
+}) {
+  return prisma.comment.deleteMany({
+    where: {
+      authorId: input.authorId,
+      id: input.commentId,
+    },
+  });
+}
+
+export async function getEditablePostBySlug(input: {
+  authorId: string;
+  slug: string;
+}): Promise<EditablePost | null> {
+  const post = await prisma.post.findFirst({
+    select: {
+      content: true,
+      id: true,
+      slug: true,
+      tags: {
+        select: {
+          id: true,
+        },
+      },
+      title: true,
+    },
+    where: {
+      authorId: input.authorId,
+      slug: input.slug,
+    },
+  });
+
+  if (!post) {
+    return null;
+  }
+
+  const attachments = await getPostAttachments(post.id);
+
+  return {
+    attachments,
+    content: post.content,
+    id: post.id,
+    slug: post.slug,
+    tagIds: post.tags.map((tag) => tag.id),
+    title: post.title,
+  };
+}
+
+export async function updateCommunityPost(input: {
+  attachments?: Array<{
+    mimeType: string;
+    originalName: string;
+    size: number;
+    storagePath: string;
+  }>;
+  content: string;
+  keepAttachmentIds: string[];
+  postId: string;
+  tagIds: string[];
+  title: string;
+}) {
+  return prisma.post.update({
+    data: {
+      attachments: {
+        create: input.attachments ?? [],
+        deleteMany: {
+          id: {
+            notIn: input.keepAttachmentIds,
+          },
+        },
+      },
+      content: input.content,
+      excerpt: getPostExcerpt(input.content),
+      tags: {
+        set: input.tagIds.map((id) => ({
+          id,
+        })),
+      },
+      title: input.title,
+    },
+    select: {
+      slug: true,
+    },
+    where: {
+      id: input.postId,
+    },
+  });
+}
+
+export async function deleteCommunityPost(input: { postId: string }) {
+  await prisma.post.delete({
+    where: {
+      id: input.postId,
     },
   });
 }
@@ -585,6 +716,25 @@ export function getPostExcerpt(content: string) {
   }
 
   return `${normalized.slice(0, 117)}...`;
+}
+
+async function getPostAttachments(postId: string): Promise<PostAttachmentItem[]> {
+  return prisma.postAttachment.findMany({
+    orderBy: {
+      createdAt: "asc",
+    },
+    select: {
+      createdAt: true,
+      id: true,
+      mimeType: true,
+      originalName: true,
+      size: true,
+      storagePath: true,
+    },
+    where: {
+      postId,
+    },
+  });
 }
 
 export function slugifyPostTitle(title: string) {

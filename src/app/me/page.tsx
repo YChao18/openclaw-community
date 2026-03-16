@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireUser, signOut } from "@/auth";
+import { UsernameForm } from "@/app/me/username-form";
 import { getUserDisplayName } from "@/lib/user/service";
 
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ export default async function MePage() {
   const user = await requireUser("/me");
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-[2rem] border border-default bg-surface p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-10">
           <p className="text-sm tracking-[0.28em] text-secondary uppercase">
@@ -45,8 +46,11 @@ export default async function MePage() {
               </p>
             </div>
             <p className="mt-4 text-sm leading-7 text-secondary">
-              你已经可以使用当前邮箱在社区中发帖、评论，后续可以继续完善用户名与头像等资料。
+              {user.username
+                ? "当前用户名可随时修改，保存后会立即刷新当前账号信息。"
+                : "你还没有设置用户名，现在就可以补充一个社区用户名。"}
             </p>
+            <UsernameForm initialUsername={user.username ?? ""} />
           </article>
 
           <article className="rounded-[1.75rem] border border-default bg-linear-to-br from-brand-yellow-soft via-brand-lobster-soft to-transparent p-6">

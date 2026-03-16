@@ -63,6 +63,7 @@ model Post {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   author      User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  attachments PostAttachment[]
   comments    Comment[]
   tags        Tag[]
   likes       PostLike[]
@@ -71,6 +72,19 @@ model Post {
 
   @@index([authorId, createdAt])
   @@index([status, publishedAt])
+}
+
+model PostAttachment {
+  id           String   @id @default(cuid())
+  postId       String
+  originalName String   @db.VarChar(255)
+  mimeType     String   @db.VarChar(120)
+  storagePath  String   @unique @db.VarChar(255)
+  size         Int
+  createdAt    DateTime @default(now())
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
 }
 
 model PostLike {

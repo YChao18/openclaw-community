@@ -12,7 +12,7 @@ export default async function TagsPage() {
   const result = await loadTagsPage();
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <section className="rounded-[2rem] border border-default bg-surface p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-10">
         <p className="text-sm tracking-[0.28em] text-secondary uppercase">
           标签目录

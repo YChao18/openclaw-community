@@ -254,7 +254,7 @@ function PostCard({ post }: { post: PostFeedItem }) {
         </span>
       </div>
 
-      <h2 className="mt-4 text-2xl font-semibold tracking-tight text-primary">
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-primary">
         <Link
           href={`/posts/${post.slug}`}
           className="transition hover:text-brand-yellow"
@@ -264,7 +264,7 @@ function PostCard({ post }: { post: PostFeedItem }) {
       </h2>
 
       {post.excerpt ? (
-        <p className="mt-3 text-sm leading-7 text-secondary">{post.excerpt}</p>
+        <p className="mt-3 text-base leading-8 text-secondary">{post.excerpt}</p>
       ) : null}
 
       <div className="mt-5 flex flex-wrap gap-2">

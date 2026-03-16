@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 export function SiteFooter() {
   return (
     <footer className="border-default/70 border-t">
-      <div className="text-secondary mx-auto flex max-w-7xl flex-col gap-4 px-6 py-6 text-sm md:px-8 lg:px-12">
+      <div className="text-secondary mx-auto flex max-w-[1480px] flex-col gap-4 px-6 py-6 text-sm md:px-8 lg:px-12">
         <p className="text-primary font-medium">{siteConfig.name}</p>
         <p>{siteConfig.description}</p>
         <div className="flex flex-wrap gap-4">

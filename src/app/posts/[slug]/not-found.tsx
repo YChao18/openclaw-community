@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function PostNotFound() {
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-14 md:px-8 lg:px-12">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-14 md:px-8 lg:px-12">
       <section className="rounded-[2rem] border border-default bg-surface p-8 text-center shadow-[0_24px_60px_var(--shadow-card)] md:p-10">
         <p className="text-sm tracking-[0.28em] text-secondary uppercase">
           帖子详情

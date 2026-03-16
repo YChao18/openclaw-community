@@ -89,8 +89,8 @@ export default async function Home() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-24 px-6 py-12 md:px-8 lg:px-12 lg:py-20">
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-24 px-6 py-12 md:px-8 lg:px-12 lg:py-20">
+      <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <CommunityHero />
 
         <div className="grid w-full auto-rows-fr gap-4 lg:grid-cols-3">

@@ -17,11 +17,77 @@ export type CurrentUser = Prisma.UserGetPayload<{
   select: typeof currentUserSelect;
 }>;
 
+export const USERNAME_MIN_LENGTH = 2;
+export const USERNAME_MAX_LENGTH = 10;
+export const USERNAME_PATTERN = /^[A-Za-z0-9_\u4e00-\u9fa5]+$/;
+
+export function normalizeUsername(value: string) {
+  return value.trim();
+}
+
+export function validateUsername(username: string) {
+  if (username.length < USERNAME_MIN_LENGTH) {
+    return `用户名至少需要 ${USERNAME_MIN_LENGTH} 个字符。`;
+  }
+
+  if (username.length > USERNAME_MAX_LENGTH) {
+    return `用户名最多 ${USERNAME_MAX_LENGTH} 个字符。`;
+  }
+
+  if (!USERNAME_PATTERN.test(username)) {
+    return "用户名只允许中文、字母、数字和下划线。";
+  }
+
+  return null;
+}
+
 export async function getUserById(id: string) {
   return prisma.user.findUnique({
     select: currentUserSelect,
     where: {
       id,
+    },
+  });
+}
+
+export async function isUsernameTaken(username: string, excludeUserId?: string) {
+  const normalizedUsername = normalizeUsername(username);
+
+  if (!normalizedUsername) {
+    return false;
+  }
+
+  const existingUser = await prisma.user.findFirst({
+    select: {
+      id: true,
+    },
+    where: {
+      id: excludeUserId
+        ? {
+            not: excludeUserId,
+          }
+        : undefined,
+      username: {
+        equals: normalizedUsername,
+        mode: Prisma.QueryMode.insensitive,
+      },
+    },
+  });
+
+  return Boolean(existingUser);
+}
+
+export async function updateUsernameForUser(params: {
+  userId: string;
+  username: string;
+}) {
+  return prisma.user.update({
+    data: {
+      username: params.username,
+    },
+    select: currentUserSelect,
+    where: {
+      id: params.userId,
     },
   });
 }

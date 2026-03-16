@@ -20,7 +20,7 @@ export default async function MyFavoritesPage() {
   const favorites = await getFavoritePosts(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <div>
         <Link
           href="/me"

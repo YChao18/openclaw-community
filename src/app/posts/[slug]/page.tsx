@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ArrowLeft, MessageSquareText, PenSquare } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/auth";
+import { deleteCommentAction, deletePostAction } from "@/app/posts/actions";
+import { CommentOwnerActions } from "@/components/community/comment-owner-actions";
 import { CommentForm } from "@/components/community/comment-form";
 import { PostEngagementBar } from "@/components/community/post-engagement-bar";
+import { PostOwnerActions } from "@/components/community/post-owner-actions";
 import { PostViewTracker } from "@/components/community/post-view-tracker";
 import {
   formatPostDate,
@@ -50,7 +53,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   if (!result.isDatabaseReady) {
     return (
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-14 md:px-8 lg:px-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-14 md:px-8 lg:px-12">
         <section className="rounded-[2rem] border border-default bg-surface p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-10">
           <p className="text-sm tracking-[0.28em] text-secondary uppercase">
             帖子详情
@@ -72,9 +75,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const post = result.post;
   const authorName = getAuthorDisplayName(post.author);
+  const isAuthor = user?.id === post.author.id;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <PostViewTracker postId={post.id} />
 
       <div>
@@ -100,7 +104,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           ))}
         </div>
 
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight text-primary md:text-5xl">
+        <h1 className="mt-5 text-5xl font-semibold tracking-tight text-primary md:text-6xl">
           {post.title}
         </h1>
 
@@ -123,6 +127,17 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           </span>
         </div>
 
+        {isAuthor ? (
+          <div className="mt-6">
+            <PostOwnerActions
+              deleteAction={deletePostAction}
+              editHref={`/posts/${post.slug}/edit`}
+              postSlug={post.slug}
+              returnTo="/posts"
+            />
+          </div>
+        ) : null}
+
         <PostEngagementBar
           favoritesCount={post.favoritesCount}
           isAuthenticated={Boolean(user)}
@@ -134,10 +149,34 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         />
 
         <div className="mt-8 rounded-[1.75rem] border border-default bg-overlay-strong px-5 py-6">
-          <div className="whitespace-pre-wrap text-base leading-8 text-primary">
+          <div className="whitespace-pre-wrap text-lg leading-9 text-primary">
             {post.content}
           </div>
         </div>
+
+        {post.attachments.length > 0 ? (
+          <div className="mt-8 rounded-[1.75rem] border border-default bg-surface px-5 py-6">
+            <p className="text-sm font-medium tracking-[0.2em] text-secondary uppercase">
+              附件
+            </p>
+            <div className="mt-4 space-y-3">
+              {post.attachments.map((attachment) => (
+                <a
+                  key={attachment.id}
+                  href={attachment.storagePath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-4 rounded-[1.25rem] border border-default bg-interactive-muted px-4 py-3 text-sm text-primary transition hover:bg-interactive-muted-hover"
+                >
+                  <span className="truncate">{attachment.originalName}</span>
+                  <span className="shrink-0 text-secondary">
+                    {formatAttachmentSize(attachment.size)}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </article>
 
       <section id="comments" className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -162,12 +201,21 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
                 key={comment.id}
                 className="rounded-[1.75rem] border border-default bg-surface p-6"
               >
-                <div className="flex flex-wrap items-center gap-3 text-sm text-secondary">
-                  <span>{getAuthorDisplayName(comment.author)}</span>
-                  <span className="h-1 w-1 rounded-full bg-current/60" />
-                  <time dateTime={comment.createdAt.toISOString()}>
-                    {formatPostDate(comment.createdAt)}
-                  </time>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-secondary">
+                    <span>{getAuthorDisplayName(comment.author)}</span>
+                    <span className="h-1 w-1 rounded-full bg-current/60" />
+                    <time dateTime={comment.createdAt.toISOString()}>
+                      {formatPostDate(comment.createdAt)}
+                    </time>
+                  </div>
+                  {user?.id === comment.author.id ? (
+                    <CommentOwnerActions
+                      commentId={comment.id}
+                      deleteAction={deleteCommentAction}
+                      postSlug={post.slug}
+                    />
+                  ) : null}
                 </div>
                 <p className="mt-4 whitespace-pre-wrap text-sm leading-8 text-primary">
                   {comment.content}
@@ -249,4 +297,12 @@ async function loadPostDetail(slug: string, viewerId?: string) {
       post: null,
     };
   }
+}
+
+function formatAttachmentSize(size: number) {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return `${Math.max(1, Math.round(size / 1024))} KB`;
 }

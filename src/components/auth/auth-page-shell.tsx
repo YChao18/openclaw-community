@@ -19,7 +19,7 @@ export function AuthPageShell({
   title,
 }: AuthPageShellProps) {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="border-default bg-surface rounded-[2rem] border p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-10">
           <p className="text-secondary text-sm tracking-[0.28em] uppercase">

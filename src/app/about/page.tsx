@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-10 md:px-8 lg:px-12 lg:py-16">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-12 px-6 py-10 md:px-8 lg:px-12 lg:py-16">
       <section className="border-default bg-surface rounded-[2.25rem] border p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-12">
         <p className="text-secondary text-sm tracking-[0.28em] uppercase">
           About

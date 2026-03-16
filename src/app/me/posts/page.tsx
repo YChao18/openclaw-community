@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, MessageSquareText } from "lucide-react";
 import { requireUser } from "@/auth";
+import { deletePostAction } from "@/app/posts/actions";
+import { PostOwnerActions } from "@/components/community/post-owner-actions";
 import { formatPostDate } from "@/lib/community";
 import { getUserPosts } from "@/lib/user/service";
 
@@ -15,7 +17,7 @@ export default async function MyPostsPage() {
   const posts = await getUserPosts(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
       <div>
         <Link
           href="/me"
@@ -38,10 +40,9 @@ export default async function MyPostsPage() {
       {posts.length > 0 ? (
         <div className="grid gap-4">
           {posts.map((post) => (
-            <Link
+            <article
               key={post.id}
-              href={`/posts/${post.slug}`}
-              className="rounded-[1.75rem] border border-default bg-surface p-6 transition hover:bg-interactive-muted-hover"
+              className="rounded-[1.75rem] border border-default bg-surface p-6"
             >
               <div className="flex flex-wrap items-center gap-3 text-sm text-secondary">
                 <time dateTime={post.createdAt.toISOString()}>
@@ -55,15 +56,26 @@ export default async function MyPostsPage() {
                   {post._count.comments} 条评论
                 </span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold text-primary">
+              <Link
+                href={`/posts/${post.slug}`}
+                className="mt-4 block text-3xl font-semibold text-primary transition hover:text-brand-yellow"
+              >
                 {post.title}
-              </h2>
+              </Link>
               {post.excerpt ? (
-                <p className="mt-3 text-sm leading-7 text-secondary">
+                <p className="mt-3 text-base leading-8 text-secondary">
                   {post.excerpt}
                 </p>
               ) : null}
-            </Link>
+              <div className="mt-5">
+                <PostOwnerActions
+                  deleteAction={deletePostAction}
+                  editHref={`/posts/${post.slug}/edit`}
+                  postSlug={post.slug}
+                  returnTo="/me/posts"
+                />
+              </div>
+            </article>
           ))}
         </div>
       ) : (

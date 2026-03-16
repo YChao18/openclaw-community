@@ -14,7 +14,9 @@ export function CommunityHero({ className }: CommunityHeroProps) {
       <div className={styles.heroLayout}>
         <div className={styles.heroInner}>
           <Brand variant="hero" className={styles.brandBlock} />
-          <h2 className={styles.communityTitle}>OpenClaw 使用者社区</h2>
+          <h2 className={cn(styles.communityTitle, "whitespace-nowrap")}>
+            OpenClaw 用户分享的经验、问题与实践
+          </h2>
           <p className={styles.description}>
             分享 Agent 实战经验，讨论自动化工作流，沉淀真实可复用的落地案例。
           </p>

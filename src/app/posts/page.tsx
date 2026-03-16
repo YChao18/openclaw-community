@@ -20,13 +20,13 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
     await loadPostsPageData(selectedTag);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-10 md:px-8 lg:px-12 lg:py-16">
+    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 py-10 md:px-8 lg:px-12 lg:py-16">
       <section className="border-default bg-surface rounded-[2.25rem] border p-8 shadow-[0_24px_60px_var(--shadow-card)] md:p-12">
         <p className="text-secondary text-sm tracking-[0.28em] uppercase">
           社区帖子流
         </p>
         <h1 className="text-primary mt-3 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">
-          在这里查看 OpenClaw 用户分享的经验、问题与一线实践
+          OpenClaw 用户分享的经验、问题与实践
         </h1>
         <p className="text-secondary mt-5 max-w-3xl text-sm leading-8 md:text-base">
           围绕 Agent、自动化工作流与真实案例展开讨论，浏览帖子、筛选标签、参与评论，沉淀可复用经验。
