@@ -11,6 +11,9 @@ export const metadata: Metadata = {
       process.env.NEXT_PUBLIC_APP_URL ??
       "http://localhost:3000",
   ),
+  icons: {
+    icon: "/favicon.ico",
+  },
   title: {
     default: siteConfig.name,
     template: `%s | ${siteConfig.shortName}`,
