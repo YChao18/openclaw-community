@@ -719,22 +719,33 @@ export function getPostExcerpt(content: string) {
 }
 
 async function getPostAttachments(postId: string): Promise<PostAttachmentItem[]> {
-  return prisma.postAttachment.findMany({
-    orderBy: {
-      createdAt: "asc",
-    },
-    select: {
-      createdAt: true,
-      id: true,
-      mimeType: true,
-      originalName: true,
-      size: true,
-      storagePath: true,
-    },
-    where: {
-      postId,
-    },
-  });
+  try {
+    return await prisma.postAttachment.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: {
+        createdAt: true,
+        id: true,
+        mimeType: true,
+        originalName: true,
+        size: true,
+        storagePath: true,
+      },
+      where: {
+        postId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2021"
+    ) {
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export function slugifyPostTitle(title: string) {
