@@ -48,10 +48,10 @@ export function buildRegisterCodeEmail(
   code: string,
 ): VerificationEmailTemplate {
   return renderBaseTemplate({
-    brandName: siteConfig.name,
+    brandName: "碳硅合创·龙虾塘",
     code,
     intro: "你正在注册社区账号，请输入下面的 6 位验证码继续设置登录密码。",
-    subject: `${siteConfig.name} 注册验证码`,
+    subject: "碳硅合创·龙虾塘 注册验证码",
   });
 }
 
@@ -59,8 +59,9 @@ export function buildResetPasswordCodeEmail(
   code: string,
 ): VerificationEmailTemplate {
   return renderBaseTemplate({
+    brandName: "碳硅合创·龙虾塘",
     code,
     intro: "你正在找回社区账号密码，请输入下面的 6 位验证码继续重置密码。",
-    subject: `${siteConfig.shortName} 找回密码验证码`,
+    subject: "碳硅合创·龙虾塘 找回密码验证码",
   });
 }
