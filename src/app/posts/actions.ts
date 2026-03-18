@@ -297,7 +297,6 @@ export async function createPostAction(
     });
 
     revalidatePath("/posts");
-    revalidatePath("/tags");
     revalidatePath("/me/posts");
     redirect(getPostRedirectPath(post.slug));
   } catch (error) {
@@ -394,7 +393,6 @@ export async function updatePostAction(
   );
 
   revalidatePath("/posts");
-  revalidatePath("/tags");
   revalidatePath("/me/posts");
   revalidatePath(getPostRedirectPath(postSlug));
   revalidatePath(getPostEditPath(postSlug));
@@ -429,7 +427,6 @@ export async function deletePostAction(formData: FormData) {
 
   revalidatePath("/posts");
   revalidatePath("/me/posts");
-  revalidatePath("/tags");
   revalidatePath(getPostRedirectPath(postSlug));
   redirect(isSafeReturnPath(returnTo) ? returnTo : "/posts");
 }

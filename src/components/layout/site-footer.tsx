@@ -11,9 +11,6 @@ export function SiteFooter() {
           <Link href="/posts" className="hover:text-primary">
             浏览帖子
           </Link>
-          <Link href="/tags" className="hover:text-primary">
-            浏览标签
-          </Link>
           <Link href="/about" className="hover:text-primary">
             项目介绍
           </Link>

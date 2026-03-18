@@ -5,8 +5,6 @@ import {
   Hash,
   Heart,
   MessageSquareText,
-  PenSquare,
-  Tags,
 } from "lucide-react";
 import type { PostFeedItem, TagFacet } from "@/lib/community";
 import { formatPostDate, getAuthorDisplayName } from "@/lib/community";
@@ -66,64 +64,6 @@ export function PostFeed({
       <section className="space-y-6">
         <div className="max-w-3xl space-y-3">
           <p className="text-secondary text-sm tracking-[0.28em] uppercase">
-            页面说明
-          </p>
-          <h2 className="text-primary text-3xl font-semibold tracking-tight">
-            浏览、筛选与发布保持在同一条内容动线里
-          </h2>
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-3">
-          <InfoCard
-            title="当前视图"
-            value={`${posts.length}`}
-            description={
-              activeTag
-                ? `当前正在查看“${activeTag.name}”标签下的帖子数量。`
-                : "当前展示社区里最新发布的全部帖子。"
-            }
-            icon={MessageSquareText}
-          />
-          <InfoCard
-            title="标签主题"
-            value={`${tags.length}`}
-            description="筛选逻辑保持不变，主题入口被整理为更轻量的内容区组件。"
-            icon={Tags}
-          />
-          <article className="border-default bg-surface rounded-[1.8rem] border p-6">
-            <div className="border-brand-yellow/20 bg-brand-yellow-soft text-brand-yellow inline-flex rounded-2xl border p-3">
-              <PenSquare className="h-5 w-5" />
-            </div>
-            <p className="text-secondary mt-5 text-sm tracking-[0.24em] uppercase">
-              参与方式
-            </p>
-            <h3 className="text-primary mt-2 text-xl font-semibold">
-              发帖、浏览标签与讨论入口保留不变
-            </h3>
-            <p className="text-secondary mt-3 text-sm leading-7">
-              弱化工程演示感后，内容入口仍然完整保留，方便继续进入发帖、详情与评论流程。
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                href="/posts/new"
-                className="inline-flex items-center rounded-full border border-brand-yellow/30 bg-brand-yellow-soft px-4 py-2 text-sm font-medium text-brand-yellow transition hover:bg-brand-yellow/20"
-              >
-                发布帖子
-              </Link>
-              <Link
-                href="/tags"
-                className="inline-flex items-center rounded-full border border-default bg-interactive-muted px-4 py-2 text-sm text-primary transition hover:bg-interactive-muted-hover"
-              >
-                浏览标签
-              </Link>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="max-w-3xl space-y-3">
-          <p className="text-secondary text-sm tracking-[0.28em] uppercase">
             帖子列表
           </p>
           <h2 className="text-primary text-3xl font-semibold tracking-tight">
@@ -167,33 +107,6 @@ export function PostFeed({
         )}
       </section>
     </div>
-  );
-}
-
-function InfoCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <article className="border-default bg-surface rounded-[1.8rem] border p-6">
-      <div className="border-brand-yellow/20 bg-brand-yellow-soft text-brand-yellow inline-flex rounded-2xl border p-3">
-        <Icon className="h-5 w-5" />
-      </div>
-      <p className="text-secondary mt-5 text-sm tracking-[0.24em] uppercase">
-        {title}
-      </p>
-      <p className="text-primary mt-2 text-3xl font-semibold tracking-tight">
-        {value}
-      </p>
-      <p className="text-secondary mt-3 text-sm leading-7">{description}</p>
-    </article>
   );
 }
 

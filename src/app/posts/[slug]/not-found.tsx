@@ -20,12 +20,6 @@ export default function PostNotFound() {
           >
             返回帖子列表
           </Link>
-          <Link
-            href="/tags"
-            className="rounded-full border border-default bg-interactive-muted px-5 py-3 text-sm text-primary transition hover:bg-interactive-muted-hover"
-          >
-            浏览标签
-          </Link>
         </div>
       </section>
     </div>
