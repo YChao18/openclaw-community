@@ -25,10 +25,12 @@ export function PlatformEcosystemEntry() {
               <p className="max-w-3xl text-base leading-8 text-[#6f604f] md:text-lg dark:text-[#d6c4b0]">
                 探索更大范围的 AI 社区内容、实践交流与生态资源
               </p>
-              <p className="text-secondary max-w-3xl text-[15px] leading-8 md:text-base md:leading-8">
-                龙虾塘聚焦 OpenClaw 用户经验、问题与实践；碳硅合创社区面向更广泛的
-                AI 探索者、开发者与行业参与者。
-              </p>
+              <div className="text-secondary max-w-3xl space-y-1.5 text-base leading-relaxed md:text-[17px]">
+                <p className="font-medium text-[#5f5347] dark:text-[#d8c7b4]">
+                  龙虾塘聚焦 OpenClaw 用户经验、问题与实践
+                </p>
+                <p>碳硅合创社区面向更广泛的 AI 探索者、开发者与行业参与者</p>
+              </div>
             </div>
           </div>
 
