@@ -8,11 +8,12 @@ type VerificationEmailTemplate = {
 };
 
 function renderBaseTemplate(params: {
+  brandName?: string;
   code: string;
   intro: string;
   subject: string;
 }) {
-  const brandName = siteConfig.shortName;
+  const brandName = params.brandName ?? siteConfig.shortName;
 
   const html = `
     <div style="margin:0;padding:32px 16px;background:#f8fafc;font-family:'IBM Plex Sans','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;color:#0f172a;">
@@ -47,9 +48,10 @@ export function buildRegisterCodeEmail(
   code: string,
 ): VerificationEmailTemplate {
   return renderBaseTemplate({
+    brandName: siteConfig.name,
     code,
     intro: "你正在注册社区账号，请输入下面的 6 位验证码继续设置登录密码。",
-    subject: `${siteConfig.shortName} 注册验证码`,
+    subject: `${siteConfig.name} 注册验证码`,
   });
 }
 
