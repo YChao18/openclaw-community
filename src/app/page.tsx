@@ -236,8 +236,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <PlatformEcosystemEntry />
-
       <section className="border-default dark:bg-surface relative overflow-hidden rounded-[2rem] border bg-white/75 px-8 py-10 shadow-[0_18px_48px_var(--shadow-card)] backdrop-blur-sm md:px-12 md:py-14">
         <div className="bg-brand-yellow-soft absolute top-0 left-10 h-24 w-48 rounded-full blur-3xl" />
         <div className="bg-brand-lobster-soft absolute right-8 bottom-0 h-24 w-40 rounded-full blur-3xl" />
@@ -270,6 +268,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <PlatformEcosystemEntry />
     </div>
   );
 }
