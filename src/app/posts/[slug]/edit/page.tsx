@@ -81,7 +81,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
             <ul className="mt-4 space-y-3 text-sm leading-7 text-secondary">
               <li>只有帖子作者本人可以进入这个页面。</li>
               <li>保存后会直接返回帖子详情页。</li>
-              <li>标题、正文和至少一个标签仍然为必填。</li>
+              <li>标题和正文仍然为必填，未选标签时会自动归类到“其他”。</li>
             </ul>
           </article>
 

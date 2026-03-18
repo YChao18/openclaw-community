@@ -38,7 +38,7 @@ export default async function NewPostPage() {
               </p>
             </div>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-secondary">
-              <li>标题、正文和至少一个标签为必填。</li>
+              <li>标题和正文为必填，未选标签时会自动归类到“其他”。</li>
               <li>发布成功后会直接跳转到帖子详情页。</li>
               <li>仅登录用户可发布帖子。</li>
             </ul>

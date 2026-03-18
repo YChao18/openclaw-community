@@ -27,7 +27,7 @@ export function CommunityHero({ className }: CommunityHeroProps) {
               <ArrowRight className={styles.buttonIcon} />
             </Link>
             <Link href="/posts/new" className={styles.secondaryButton}>
-              发布经验
+              发布帖子
             </Link>
             <Link href="#topics" className={styles.secondaryButton}>
               查看标签

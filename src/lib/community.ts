@@ -169,7 +169,9 @@ const favoritePostArgs = Prisma.validator<Prisma.PostFavoriteDefaultArgs>()({
   },
 });
 
-type FavoritePostQueryResult = Prisma.PostFavoriteGetPayload<typeof favoritePostArgs>;
+type FavoritePostQueryResult = Prisma.PostFavoriteGetPayload<
+  typeof favoritePostArgs
+>;
 
 export type FavoritePostItem = FavoritePostQueryResult["post"] & {
   favoritesCount: number;
@@ -178,9 +180,13 @@ export type FavoritePostItem = FavoritePostQueryResult["post"] & {
   viewCount: number;
 };
 
-function withPostCounts<T extends { _count: { favorites: number; likes: number } }>(
-  post: T,
-) {
+const FALLBACK_TAG_NAME = "其他";
+const FALLBACK_TAG_SLUG = "other";
+const FALLBACK_TAG_DESCRIPTION = "用于归类未指定明确主题的帖子。";
+
+function withPostCounts<
+  T extends { _count: { favorites: number; likes: number } },
+>(post: T) {
   return {
     ...post,
     favoritesCount: post._count.favorites,
@@ -213,6 +219,8 @@ export async function getPostFeed(options: GetPostFeedOptions = {}) {
 }
 
 export async function getTagFacets() {
+  await ensureFallbackTag();
+
   const tags = await prisma.tag.findMany({
     orderBy: [{ name: "asc" }],
     select: {
@@ -298,6 +306,115 @@ export async function getCommunitySnapshot() {
   };
 }
 
+export async function getCommunityActivityStats() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const activeSince = new Date();
+  activeSince.setHours(0, 0, 0, 0);
+  activeSince.setDate(activeSince.getDate() - 6);
+
+  const [
+    todayPosts,
+    activePostAuthors,
+    activeCommentAuthors,
+    activeLikeUsers,
+    activeFavoriteUsers,
+    publishedPosts,
+  ] = await Promise.all([
+    prisma.post.count({
+      where: {
+        status: PostStatus.PUBLISHED,
+        createdAt: {
+          gte: today,
+        },
+      },
+    }),
+    prisma.post.findMany({
+      distinct: ["authorId"],
+      select: {
+        authorId: true,
+      },
+      where: {
+        status: PostStatus.PUBLISHED,
+        createdAt: {
+          gte: activeSince,
+        },
+      },
+    }),
+    prisma.comment.findMany({
+      distinct: ["authorId"],
+      select: {
+        authorId: true,
+      },
+      where: {
+        createdAt: {
+          gte: activeSince,
+        },
+        post: {
+          status: PostStatus.PUBLISHED,
+        },
+      },
+    }),
+    prisma.postLike.findMany({
+      distinct: ["userId"],
+      select: {
+        userId: true,
+      },
+      where: {
+        createdAt: {
+          gte: activeSince,
+        },
+        post: {
+          status: PostStatus.PUBLISHED,
+        },
+      },
+    }),
+    prisma.postFavorite.findMany({
+      distinct: ["userId"],
+      select: {
+        userId: true,
+      },
+      where: {
+        createdAt: {
+          gte: activeSince,
+        },
+        post: {
+          status: PostStatus.PUBLISHED,
+        },
+      },
+    }),
+    prisma.post.findMany({
+      select: {
+        excerpt: true,
+        tags: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+        title: true,
+      },
+      where: {
+        status: PostStatus.PUBLISHED,
+      },
+    }),
+  ]);
+
+  const activeUsers = new Set([
+    ...activePostAuthors.map((item) => item.authorId),
+    ...activeCommentAuthors.map((item) => item.authorId),
+    ...activeLikeUsers.map((item) => item.userId),
+    ...activeFavoriteUsers.map((item) => item.userId),
+  ]);
+
+  return {
+    activeUsers: activeUsers.size,
+    solvedCount: publishedPosts.filter((post) => isSolvedPost(post)).length,
+    todayPosts,
+  };
+}
+
 export async function getFavoritePosts(userId: string) {
   const favorites = await prisma.postFavorite.findMany({
     ...favoritePostArgs,
@@ -347,6 +464,7 @@ export async function createCommunityPost(input: {
   tagIds: string[];
   title: string;
 }) {
+  const tagIds = await resolvePostTagIds(input.tagIds);
   const slug = await createUniquePostSlug(input.title);
 
   return prisma.post.create({
@@ -363,7 +481,7 @@ export async function createCommunityPost(input: {
       publishedAt: new Date(),
       slug,
       tags: {
-        connect: input.tagIds.map((id) => ({
+        connect: tagIds.map((id) => ({
           id,
         })),
       },
@@ -452,6 +570,8 @@ export async function updateCommunityPost(input: {
   tagIds: string[];
   title: string;
 }) {
+  const tagIds = await resolvePostTagIds(input.tagIds);
+
   return prisma.post.update({
     data: {
       attachments: {
@@ -465,7 +585,7 @@ export async function updateCommunityPost(input: {
       content: input.content,
       excerpt: getPostExcerpt(input.content),
       tags: {
-        set: input.tagIds.map((id) => ({
+        set: tagIds.map((id) => ({
           id,
         })),
       },
@@ -700,6 +820,81 @@ export function formatPostDate(date: Date) {
   }).format(date);
 }
 
+export function formatRelativeTime(date: Date, now = new Date()) {
+  const diffMs = date.getTime() - now.getTime();
+  const absDiffMs = Math.abs(diffMs);
+
+  if (absDiffMs < 60 * 1000) {
+    return "刚刚";
+  }
+
+  const formatter = new Intl.RelativeTimeFormat("zh-CN", {
+    numeric: "auto",
+  });
+
+  const units = [
+    { unit: "year", value: 1000 * 60 * 60 * 24 * 365 },
+    { unit: "month", value: 1000 * 60 * 60 * 24 * 30 },
+    { unit: "week", value: 1000 * 60 * 60 * 24 * 7 },
+    { unit: "day", value: 1000 * 60 * 60 * 24 },
+    { unit: "hour", value: 1000 * 60 * 60 },
+    { unit: "minute", value: 1000 * 60 },
+  ] as const;
+
+  for (const item of units) {
+    if (absDiffMs >= item.value) {
+      return formatter.format(Math.round(diffMs / item.value), item.unit);
+    }
+  }
+
+  return "刚刚";
+}
+
+export function getPostTrendScore(post: {
+  _count: { comments: number };
+  favoritesCount: number;
+  likesCount: number;
+  viewCount: number;
+}) {
+  return (
+    post.likesCount * 4 +
+    post.favoritesCount * 3 +
+    post._count.comments * 2 +
+    post.viewCount * 0.05
+  );
+}
+
+export function isHotPost(post: {
+  _count: { comments: number };
+  favoritesCount: number;
+  likesCount: number;
+  viewCount: number;
+}) {
+  return (
+    post._count.comments >= 4 ||
+    post.likesCount >= 3 ||
+    post.favoritesCount >= 2 ||
+    post.viewCount >= 120 ||
+    getPostTrendScore(post) >= 18
+  );
+}
+
+export function isSolvedPost(post: {
+  excerpt?: string | null;
+  tags: Array<{ name: string; slug: string }>;
+  title: string;
+}) {
+  const content = [
+    post.title,
+    post.excerpt ?? "",
+    ...post.tags.map((tag) => tag.name),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return /已解决|已处理|已修复|solved|resolved|fixed/.test(content);
+}
+
 export function getAuthorDisplayName(author: {
   email: string | null;
   name: string | null;
@@ -718,7 +913,9 @@ export function getPostExcerpt(content: string) {
   return `${normalized.slice(0, 117)}...`;
 }
 
-async function getPostAttachments(postId: string): Promise<PostAttachmentItem[]> {
+async function getPostAttachments(
+  postId: string,
+): Promise<PostAttachmentItem[]> {
   try {
     return await prisma.postAttachment.findMany({
       orderBy: {
@@ -767,6 +964,95 @@ export function slugifyPostTitle(title: string) {
 export async function createUniquePostSlug(title: string) {
   const baseSlug = slugifyPostTitle(title);
   const matches = await prisma.post.findMany({
+    select: {
+      slug: true,
+    },
+    where: {
+      slug: {
+        startsWith: baseSlug,
+      },
+    },
+  });
+
+  const existing = new Set(matches.map((item) => item.slug));
+
+  if (!existing.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let index = 2;
+  let nextSlug = `${baseSlug}-${index}`;
+
+  while (existing.has(nextSlug)) {
+    index += 1;
+    nextSlug = `${baseSlug}-${index}`;
+  }
+
+  return nextSlug;
+}
+
+async function resolvePostTagIds(tagIds: string[]) {
+  const uniqueTagIds = [...new Set(tagIds)];
+
+  if (uniqueTagIds.length > 0) {
+    return uniqueTagIds;
+  }
+
+  const fallbackTag = await ensureFallbackTag();
+  return [fallbackTag.id];
+}
+
+async function ensureFallbackTag() {
+  const existingTag = await prisma.tag.findUnique({
+    where: {
+      name: FALLBACK_TAG_NAME,
+    },
+  });
+
+  if (existingTag) {
+    return existingTag;
+  }
+
+  const slug = await createUniqueTagSlug(FALLBACK_TAG_SLUG);
+
+  try {
+    return await prisma.tag.create({
+      data: {
+        description: FALLBACK_TAG_DESCRIPTION,
+        name: FALLBACK_TAG_NAME,
+        slug,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const retryTag = await prisma.tag.findUnique({
+        where: {
+          name: FALLBACK_TAG_NAME,
+        },
+      });
+
+      if (retryTag) {
+        return retryTag;
+      }
+
+      return prisma.tag.create({
+        data: {
+          description: FALLBACK_TAG_DESCRIPTION,
+          name: FALLBACK_TAG_NAME,
+          slug: await createUniqueTagSlug(`${FALLBACK_TAG_SLUG}-tag`),
+        },
+      });
+    }
+
+    throw error;
+  }
+}
+
+async function createUniqueTagSlug(baseSlug: string) {
+  const matches = await prisma.tag.findMany({
     select: {
       slug: true,
     },

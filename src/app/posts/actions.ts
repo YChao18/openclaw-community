@@ -119,19 +119,17 @@ function validatePostInput(input: {
 }) {
   const errors: CommunityActionErrors = {};
 
-  if (input.title.length < 6) {
-    errors.title = "标题至少需要 6 个字符。";
+  if (input.title.length === 0) {
+    errors.title = "请输入标题。";
   } else if (input.title.length > 160) {
     errors.title = "标题最多 160 个字符。";
   }
 
-  if (input.content.length < 20) {
-    errors.content = "正文至少需要 20 个字符。";
+  if (input.content.length === 0) {
+    errors.content = "请输入正文。";
   }
 
-  if (input.selectedTagIds.length === 0) {
-    errors.tags = "请至少选择一个标签。";
-  } else {
+  if (input.selectedTagIds.length > 0) {
     const availableTagIds = new Set(input.availableTags.map((tag) => tag.id));
     const hasInvalidTag = input.selectedTagIds.some(
       (tagId) => !availableTagIds.has(tagId),
@@ -272,7 +270,7 @@ export async function createPostAction(
   if (errors.title || errors.content || errors.tags) {
     return {
       errors,
-      message: "请完善帖子内容后再提交。",
+      message: "请补全必填内容后再提交。",
     };
   }
 
@@ -359,7 +357,7 @@ export async function updatePostAction(
   if (errors.title || errors.content || errors.tags) {
     return {
       errors,
-      message: "请完善帖子内容后再提交。",
+      message: "请补全必填内容后再提交。",
     };
   }
 

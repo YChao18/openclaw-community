@@ -171,6 +171,9 @@ export function PostComposerForm({
             </label>
           ))}
         </div>
+        <p className="text-sm leading-7 text-secondary">
+          标签可选，不选择时系统会自动归类到“其他”。
+        </p>
         {state.errors?.tags ? (
           <p className="text-sm text-brand-lobster">{state.errors.tags}</p>
         ) : null}

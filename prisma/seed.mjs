@@ -23,6 +23,11 @@ const tags = [
     name: "问题排查",
     slug: "debugging",
   },
+  {
+    description: "用于归类未指定明确主题的帖子。",
+    name: "其他",
+    slug: "other",
+  },
 ];
 
 async function main() {
