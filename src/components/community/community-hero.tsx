@@ -35,7 +35,7 @@ export function CommunityHero({ className }: CommunityHeroProps) {
           </div>
         </div>
 
-        <div className={styles.heroAccent} aria-hidden="true">
+        <div className={styles.heroAccent}>
           <div className={styles.accentOrb} />
           <div className={styles.accentPanel}>
             <p className={styles.accentEyebrow}>Community</p>
