@@ -283,14 +283,14 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <section className="space-y-10">
         <div className="space-y-6">
           <SectionHeader
             eyebrow="Scenarios"
             title="你可以在这里做什么"
             description="把用户最常见的意图直接摆在前面，降低理解成本，也提升点击意愿。"
           />
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {scenarioItems.map((item) => (
               <FeatureCard key={item.title} item={item} compact />
             ))}
@@ -303,7 +303,7 @@ export default async function AboutPage() {
             title="适合谁"
             description="如果你正在用 OpenClaw、做 Agent 或自动化，这里就是你的讨论与沉淀空间。"
           />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {audienceItems.map((item) => (
               <article
                 key={item.label}

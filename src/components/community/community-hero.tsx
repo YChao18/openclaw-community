@@ -15,33 +15,30 @@ export function CommunityHero({ className }: CommunityHeroProps) {
         <div className={styles.heroInner}>
           <Brand variant="hero" className={styles.brandBlock} />
           <h2 className={cn(styles.communityTitle, "whitespace-nowrap")}>
-            OpenClaw 用户分享的经验、问题与实践
+            OpenClaw 鐢ㄦ埛鍒嗕韩鐨勭粡楠屻€侀棶棰樹笌瀹炶返
           </h2>
           <p className={styles.description}>
-            分享 Agent 实战经验，讨论自动化工作流，沉淀真实可复用的落地案例。
+            鍒嗕韩 Agent 瀹炴垬缁忛獙锛岃璁鸿嚜鍔ㄥ寲宸ヤ綔娴侊紝娌夋穩鐪熷疄鍙鐢ㄧ殑钀藉湴妗堜緥銆?
           </p>
 
-          <div className={styles.actions}>
-            <Link href="/posts" className={styles.primaryButton}>
-              浏览社区
-              <ArrowRight className={styles.buttonIcon} />
-            </Link>
-            <Link href="/posts/new" className={styles.secondaryButton}>
-              发布帖子
-            </Link>
-            <Link href="#topics" className={styles.secondaryButton}>
-              查看标签
-            </Link>
-          </div>
-        </div>
-
-        <div className={styles.heroAccent} aria-hidden="true">
-          <div className={styles.accentOrb} />
           <div className={styles.accentPanel}>
             <p className={styles.accentEyebrow}>Community</p>
             <p className={styles.accentCopy}>
-              面向真实实践者的 OpenClaw 讨论空间，沉淀案例、问题和工作流经验。
+              闈㈠悜鐪熷疄瀹炶返鑰呯殑 OpenClaw 璁ㄨ绌洪棿锛屾矇娣€妗堜緥銆侀棶棰樺拰宸ヤ綔娴佺粡楠屻€?
             </p>
+          </div>
+
+          <div className={styles.actions}>
+            <Link href="/posts" className={styles.primaryButton}>
+              娴忚绀惧尯
+              <ArrowRight className={styles.buttonIcon} />
+            </Link>
+            <Link href="/posts/new" className={styles.secondaryButton}>
+              鍙戝竷甯栧瓙
+            </Link>
+            <Link href="#topics" className={styles.secondaryButton}>
+              鏌ョ湅鏍囩
+            </Link>
           </div>
         </div>
       </div>
