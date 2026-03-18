@@ -1,9 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { initialCommunityActionState } from "@/app/posts/action-state";
 import { createPostAction } from "@/app/posts/actions";
 import { SubmitButton } from "@/components/community/submit-button";
+import {
+  POST_ATTACHMENT_MAX_TOTAL_SIZE_LABEL,
+  validateAttachmentFiles,
+} from "@/lib/post-attachments";
 import { cn } from "@/lib/utils";
 import type { CommunityTagOption, PostAttachmentItem } from "@/lib/community";
 import type { CommunityActionState } from "@/app/posts/action-state";
@@ -38,14 +42,43 @@ export function PostComposerForm({
   submitLabel = "发布帖子",
   tags,
 }: PostComposerFormProps) {
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [clientAttachmentError, setClientAttachmentError] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [state, formAction] = useActionState(
     action,
     initialCommunityActionState,
   );
 
+  function handleAttachmentChange(files: FileList | null) {
+    const nextFiles = Array.from(files ?? []);
+    const nextError = validateAttachmentFiles(nextFiles) ?? "";
+
+    setSelectedFiles(nextFiles);
+    setClientAttachmentError(nextError);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const attachmentField = event.currentTarget.elements.namedItem("attachments");
+    const files =
+      attachmentField instanceof HTMLInputElement
+        ? Array.from(attachmentField.files ?? [])
+        : selectedFiles;
+    const nextError = validateAttachmentFiles(files) ?? "";
+
+    setClientAttachmentError(nextError);
+
+    if (nextError) {
+      event.preventDefault();
+    }
+  }
+
   return (
-    <form action={formAction} className="space-y-6" encType="multipart/form-data">
+    <form
+      action={formAction}
+      className="space-y-6"
+      encType="multipart/form-data"
+      onSubmit={handleSubmit}
+    >
       {hiddenFields.map((field) => (
         <input
           key={field.name}
@@ -99,22 +132,19 @@ export function PostComposerForm({
           type="file"
           multiple
           accept=".pdf,image/png,image/jpeg,image/webp,image/gif"
-          onChange={(event) =>
-            setSelectedFiles(
-              Array.from(event.target.files ?? []).map((file) => file.name),
-            )
-          }
+          onChange={(event) => handleAttachmentChange(event.target.files)}
           className="block w-full text-sm text-secondary file:mr-4 file:rounded-full file:border file:border-default file:bg-surface file:px-4 file:py-2 file:text-sm file:text-primary hover:file:bg-interactive-muted-hover"
         />
         <p className="text-sm leading-7 text-secondary">
-          支持 PDF、PNG、JPG、JPEG、WEBP、GIF，单个附件不超过 10MB。
+          支持 PDF、PNG、JPG、JPEG、WEBP、GIF，单个附件不超过 10MB，总大小不超过{" "}
+          {POST_ATTACHMENT_MAX_TOTAL_SIZE_LABEL}。
         </p>
         {selectedFiles.length > 0 ? (
           <div className="rounded-[1.25rem] border border-default bg-interactive-muted px-4 py-3 text-sm text-secondary">
             <p className="font-medium text-primary">待上传附件</p>
             <ul className="mt-2 space-y-2">
-              {selectedFiles.map((fileName) => (
-                <li key={fileName}>{fileName}</li>
+              {selectedFiles.map((file) => (
+                <li key={`${file.name}-${file.size}`}>{file.name}</li>
               ))}
             </ul>
           </div>
@@ -144,8 +174,10 @@ export function PostComposerForm({
             </div>
           </div>
         ) : null}
-        {state.errors?.attachments ? (
-          <p className="text-sm text-brand-lobster">{state.errors.attachments}</p>
+        {clientAttachmentError || state.errors?.attachments ? (
+          <p className="text-sm text-brand-lobster">
+            {clientAttachmentError || state.errors?.attachments}
+          </p>
         ) : null}
       </div>
 

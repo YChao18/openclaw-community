@@ -1,8 +1,9 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -25,6 +26,10 @@ import {
   setPostFavoriteState,
   setPostLikeState,
 } from "@/lib/community";
+import {
+  getAttachmentExtension as getNormalizedAttachmentExtension,
+  validateAttachmentFiles,
+} from "@/lib/post-attachments";
 
 const POST_ATTACHMENT_DIR = join(
   process.cwd(),
@@ -33,29 +38,6 @@ const POST_ATTACHMENT_DIR = join(
   "post-attachments",
 );
 const POST_ATTACHMENT_PUBLIC_PREFIX = "/uploads/post-attachments";
-const POST_ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
-const ALLOWED_ATTACHMENT_TYPES = new Set([
-  "application/pdf",
-  "image/gif",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
-const ALLOWED_ATTACHMENT_EXTENSIONS = new Set([
-  ".gif",
-  ".jpeg",
-  ".jpg",
-  ".pdf",
-  ".png",
-  ".webp",
-]);
-const MIME_EXTENSION_MAP: Record<string, string> = {
-  "application/pdf": ".pdf",
-  "image/gif": ".gif",
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-};
 
 function normalizeTextEntry(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -148,32 +130,11 @@ function isSafeReturnPath(path: string) {
 }
 
 function getAttachmentExtension(file: File) {
-  const originalExtension = extname(file.name).toLowerCase();
-
-  if (ALLOWED_ATTACHMENT_EXTENSIONS.has(originalExtension)) {
-    return originalExtension;
-  }
-
-  return MIME_EXTENSION_MAP[file.type] ?? "";
-}
-
-function validateAttachmentFiles(files: File[]) {
-  for (const file of files) {
-    const extension = getAttachmentExtension(file);
-
-    if (
-      !ALLOWED_ATTACHMENT_TYPES.has(file.type) ||
-      !ALLOWED_ATTACHMENT_EXTENSIONS.has(extension)
-    ) {
-      return "附件仅支持 PDF、PNG、JPG、JPEG、WEBP 和 GIF 文件。";
-    }
-
-    if (file.size > POST_ATTACHMENT_MAX_SIZE) {
-      return "单个附件大小不能超过 10MB。";
-    }
-  }
-
-  return null;
+  return getNormalizedAttachmentExtension({
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  });
 }
 
 async function persistAttachmentFiles(files: File[]) {
@@ -242,6 +203,39 @@ function getRemovedAttachments(
   return currentAttachments.filter((attachment) => !keepSet.has(attachment.id));
 }
 
+function getAttachmentFailureState(message: string): CommunityActionState {
+  return {
+    errors: {
+      attachments: message,
+    },
+    message,
+  };
+}
+
+function isAttachmentPersistenceError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    const message = `${error.message} ${JSON.stringify(error.meta ?? {})}`;
+    return message.includes("PostAttachment");
+  }
+
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    return error.message.includes("PostAttachment");
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const nodeError = error as NodeJS.ErrnoException;
+
+  return Boolean(
+    nodeError.code &&
+      ["EACCES", "EBUSY", "EEXIST", "ENOENT", "ENOSPC", "EPERM", "EROFS"].includes(
+        nodeError.code,
+      ),
+  );
+}
+
 export async function createPostAction(
   _prevState: CommunityActionState,
   formData: FormData,
@@ -283,7 +277,14 @@ export async function createPostAction(
     };
   }
 
-  const savedAttachments = await persistAttachmentFiles(attachmentFiles);
+  let savedAttachments: Awaited<ReturnType<typeof persistAttachmentFiles>> = [];
+
+  try {
+    savedAttachments = await persistAttachmentFiles(attachmentFiles);
+  } catch (error) {
+    console.error("Failed to persist post attachments", error);
+    return getAttachmentFailureState("附件上传失败，请稍后重试。");
+  }
 
   try {
     const post = await createCommunityPost({
@@ -299,6 +300,12 @@ export async function createPostAction(
     redirect(getPostRedirectPath(post.slug));
   } catch (error) {
     await removeStoredFiles(savedAttachments.map((attachment) => attachment.storagePath));
+
+    if (savedAttachments.length > 0 && isAttachmentPersistenceError(error)) {
+      console.error("Failed to save post attachments", error);
+      return getAttachmentFailureState("附件保存失败，请稍后重试。");
+    }
+
     throw error;
   }
 }
@@ -370,7 +377,14 @@ export async function updatePostAction(
     };
   }
 
-  const savedAttachments = await persistAttachmentFiles(attachmentFiles);
+  let savedAttachments: Awaited<ReturnType<typeof persistAttachmentFiles>> = [];
+
+  try {
+    savedAttachments = await persistAttachmentFiles(attachmentFiles);
+  } catch (error) {
+    console.error("Failed to persist post attachments during edit", error);
+    return getAttachmentFailureState("附件上传失败，请稍后重试。");
+  }
 
   try {
     await updateCommunityPost({
@@ -383,6 +397,15 @@ export async function updatePostAction(
     });
   } catch (error) {
     await removeStoredFiles(savedAttachments.map((attachment) => attachment.storagePath));
+
+    if (
+      (savedAttachments.length > 0 || editablePost.attachments.length > 0) &&
+      isAttachmentPersistenceError(error)
+    ) {
+      console.error("Failed to save post attachments during edit", error);
+      return getAttachmentFailureState("附件保存失败，请稍后重试。");
+    }
+
     throw error;
   }
 
