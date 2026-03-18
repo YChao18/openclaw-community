@@ -68,7 +68,9 @@
   z-index: 1;
   display: flex;
   align-items: stretch;
+  justify-content: space-between;
   min-height: 24rem;
+  gap: 2.5rem;
 }
 
 .heroInner {
@@ -97,53 +99,11 @@
   color: rgba(71, 85, 105, 0.82);
 }
 
-.accentPanel {
-  display: inline-grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 0.75rem;
-  max-width: min(100%, 34rem);
-  margin-top: 20px;
-  padding: 0.75rem 0.9rem;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.66);
-  box-shadow:
-    0 8px 22px rgba(15, 23, 42, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.76);
-  backdrop-filter: blur(12px);
-}
-
-.accentEyebrow {
-  margin: 0;
-  align-self: start;
-  padding: 0.42rem 0.64rem;
-  border-radius: 999px;
-  background: rgba(255, 248, 235, 0.92);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1;
-  text-transform: uppercase;
-  color: rgba(71, 85, 105, 0.62);
-  white-space: nowrap;
-}
-
-.accentCopy {
-  margin: 0;
-  max-width: 24rem;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.5;
-  color: rgba(30, 41, 59, 0.84);
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 36px;
 }
 
 .primaryButton,
@@ -194,9 +154,84 @@
   height: 16px;
 }
 
+.heroAccent {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 26rem;
+  margin-left: auto;
+  padding: 0 0 0.35rem;
+  animation: heroFadeUp 640ms ease both;
+}
+
+.accentOrb {
+  position: absolute;
+  right: 1.5rem;
+  bottom: -1.5rem;
+  width: 11.5rem;
+  height: 11.5rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 226, 182, 0.72),
+    rgba(255, 226, 182, 0.14) 56%,
+    transparent 78%
+  );
+  filter: blur(8px);
+}
+
+.accentPanel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: min(100%, 31rem);
+  min-height: 3.4rem;
+  padding: 0.55rem 0.8rem 0.55rem 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(14px);
+  white-space: nowrap;
+}
+
+.accentEyebrow {
+  margin: 0;
+  flex: none;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  background: rgba(255, 248, 235, 0.92);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.62);
+  white-space: nowrap;
+}
+
+.accentCopy {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: rgba(30, 41, 59, 0.84);
+  white-space: nowrap;
+}
+
 @media (max-width: 1279px) {
+  .heroAccent {
+    min-width: 22rem;
+  }
+
   .accentPanel {
-    max-width: min(100%, 31rem);
+    width: min(100%, 27rem);
+    padding-inline: 0.72rem;
   }
 
   .accentCopy {
@@ -269,7 +304,7 @@
   border-color: rgba(148, 163, 184, 0.14);
   background: rgba(15, 23, 42, 0.58);
   box-shadow:
-    0 8px 24px rgba(2, 6, 23, 0.16),
+    0 12px 28px rgba(2, 6, 23, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -286,6 +321,10 @@
   .heroLayout {
     min-height: auto;
   }
+
+  .heroAccent {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {
@@ -301,17 +340,6 @@
   .description {
     font-size: 15px;
     line-height: 1.8;
-  }
-
-  .accentPanel {
-    grid-template-columns: 1fr;
-    gap: 0.65rem;
-    padding: 0.78rem 0.82rem;
-  }
-
-  .accentCopy {
-    max-width: none;
-    line-height: 1.45;
   }
 
   .actions {
