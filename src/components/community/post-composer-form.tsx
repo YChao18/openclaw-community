@@ -1,16 +1,17 @@
 "use client";
 
 import { useActionState, useState, type FormEvent } from "react";
+import type { CommunityActionState } from "@/app/posts/action-state";
 import { initialCommunityActionState } from "@/app/posts/action-state";
 import { createPostAction } from "@/app/posts/actions";
+import { PostRichTextEditor } from "@/components/community/post-rich-text-editor";
 import { SubmitButton } from "@/components/community/submit-button";
+import type { CommunityTagOption, PostAttachmentItem } from "@/lib/community";
 import {
   POST_ATTACHMENT_MAX_TOTAL_SIZE_LABEL,
   validateAttachmentFiles,
 } from "@/lib/post-attachments";
 import { cn } from "@/lib/utils";
-import type { CommunityTagOption, PostAttachmentItem } from "@/lib/community";
-import type { CommunityActionState } from "@/app/posts/action-state";
 
 type PostComposerFormProps = {
   action?: (
@@ -18,19 +19,19 @@ type PostComposerFormProps = {
     formData: FormData,
   ) => Promise<CommunityActionState>;
   description?: string;
+  hiddenFields?: Array<{
+    name: string;
+    value: string;
+  }>;
   initialValues?: {
     attachments?: PostAttachmentItem[];
     content: string;
     tagIds: string[];
     title: string;
   };
-  submitLabel?: string;
-  hiddenFields?: Array<{
-    name: string;
-    value: string;
-  }>;
-  tags: CommunityTagOption[];
   pendingLabel?: string;
+  submitLabel?: string;
+  tags: CommunityTagOption[];
 };
 
 export function PostComposerForm({
@@ -44,6 +45,9 @@ export function PostComposerForm({
 }: PostComposerFormProps) {
   const [clientAttachmentError, setClientAttachmentError] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+    () => initialValues?.tagIds ?? [],
+  );
   const [state, formAction] = useActionState(
     action,
     initialCommunityActionState,
@@ -70,6 +74,18 @@ export function PostComposerForm({
     if (nextError) {
       event.preventDefault();
     }
+  }
+
+  function handleTagToggle(tagId: string, checked: boolean) {
+    setSelectedTagIds((currentTagIds) => {
+      if (checked) {
+        return currentTagIds.includes(tagId)
+          ? currentTagIds
+          : [...currentTagIds, tagId];
+      }
+
+      return currentTagIds.filter((currentTagId) => currentTagId !== tagId);
+    });
   }
 
   return (
@@ -109,13 +125,11 @@ export function PostComposerForm({
         <label htmlFor="content" className="text-sm font-medium text-primary">
           正文
         </label>
-        <textarea
+        <PostRichTextEditor
           id="content"
           name="content"
-          rows={12}
           defaultValue={initialValues?.content}
           placeholder="写下你的经验、问题背景、已尝试过的方法，以及希望得到的反馈。"
-          className="w-full rounded-[1.5rem] border border-default bg-interactive-muted px-4 py-4 text-base leading-8 text-primary outline-none transition placeholder:text-secondary/80 focus:border-brand-yellow/40 md:text-lg"
         />
         {state.errors?.content ? (
           <p className="text-sm text-brand-lobster">{state.errors.content}</p>
@@ -195,7 +209,10 @@ export function PostComposerForm({
                 type="checkbox"
                 name="tagIds"
                 value={tag.id}
-                defaultChecked={initialValues?.tagIds.includes(tag.id)}
+                checked={selectedTagIds.includes(tag.id)}
+                onChange={(event) =>
+                  handleTagToggle(tag.id, event.currentTarget.checked)
+                }
                 className="h-4 w-4 rounded border-default bg-transparent text-brand-yellow focus:ring-0"
               />
               <span>{tag.name}</span>
@@ -219,9 +236,7 @@ export function PostComposerForm({
 
       <div className="flex flex-wrap items-center gap-3">
         <SubmitButton pendingLabel={pendingLabel}>{submitLabel}</SubmitButton>
-        <p className="text-sm leading-7 text-secondary">
-          {description}
-        </p>
+        <p className="text-sm leading-7 text-secondary">{description}</p>
       </div>
     </form>
   );

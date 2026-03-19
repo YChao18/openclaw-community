@@ -30,6 +30,11 @@ import {
   getAttachmentExtension as getNormalizedAttachmentExtension,
   validateAttachmentFiles,
 } from "@/lib/post-attachments";
+import {
+  getPostPlainTextContent,
+  normalizePostContentForStorage,
+  postContentHasInlineImage,
+} from "@/lib/post-content";
 
 const POST_ATTACHMENT_DIR = join(
   process.cwd(),
@@ -57,6 +62,11 @@ function getStringValues(formData: FormData, fieldName: string) {
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+function getRawStringEntry(formData: FormData, fieldName: string) {
+  const value = formData.get(fieldName);
+  return typeof value === "string" ? value : "";
 }
 
 function isFileEntry(value: FormDataEntryValue): value is File {
@@ -100,6 +110,8 @@ function validatePostInput(input: {
   title: string;
 }) {
   const errors: CommunityActionErrors = {};
+  const plainTextContent = getPostPlainTextContent(input.content);
+  const hasInlineImage = postContentHasInlineImage(input.content);
 
   if (input.title.length === 0) {
     errors.title = "请输入标题。";
@@ -107,7 +119,7 @@ function validatePostInput(input: {
     errors.title = "标题最多 160 个字符。";
   }
 
-  if (input.content.length === 0) {
+  if (plainTextContent.length === 0 && !hasInlineImage) {
     errors.content = "请输入正文。";
   }
 
@@ -250,7 +262,9 @@ export async function createPostAction(
 
   const availableTags = await getTagOptions();
   const title = normalizeTextEntry(formData.get("title"));
-  const content = normalizeTextEntry(formData.get("content"));
+  const content = normalizePostContentForStorage(
+    getRawStringEntry(formData, "content"),
+  );
   const selectedTagIds = getTagIds(formData);
   const attachmentFiles = getAttachmentFiles(formData);
   const attachmentError = validateAttachmentFiles(attachmentFiles);
@@ -342,7 +356,9 @@ export async function updatePostAction(
 
   const availableTags = await getTagOptions();
   const title = normalizeTextEntry(formData.get("title"));
-  const content = normalizeTextEntry(formData.get("content"));
+  const content = normalizePostContentForStorage(
+    getRawStringEntry(formData, "content"),
+  );
   const selectedTagIds = getTagIds(formData);
   const keepAttachmentIds = getStringValues(formData, "keepAttachmentIds").filter(
     (attachmentId) =>

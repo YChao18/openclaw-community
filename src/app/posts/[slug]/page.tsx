@@ -14,6 +14,7 @@ import {
   getAuthorDisplayName,
   getPostBySlug,
 } from "@/lib/community";
+import { getRenderablePostContent } from "@/lib/post-content";
 
 type PostDetailPageProps = {
   params: Promise<{
@@ -76,6 +77,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const post = result.post;
   const authorName = getAuthorDisplayName(post.author);
   const isAuthor = user?.id === post.author.id;
+  const richContent = getRenderablePostContent(post.content);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-8 lg:px-12 lg:py-14">
@@ -149,9 +151,16 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         />
 
         <div className="mt-8 rounded-[1.75rem] border border-default bg-overlay-strong px-5 py-6">
-          <div className="whitespace-pre-wrap text-lg leading-9 text-primary">
-            {post.content}
-          </div>
+          {richContent ? (
+            <div
+              className="post-rich-content text-lg leading-9 text-primary"
+              dangerouslySetInnerHTML={{ __html: richContent }}
+            />
+          ) : (
+            <div className="whitespace-pre-wrap text-lg leading-9 text-primary">
+              {post.content}
+            </div>
+          )}
         </div>
 
         {post.attachments.length > 0 ? (

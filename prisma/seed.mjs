@@ -24,6 +24,16 @@ const tags = [
     slug: "debugging",
   },
   {
+    description: "OpenClaw 上手指南、教程与使用经验的分享。",
+    name: "openclaw教程",
+    slug: "openclaw-tutorial",
+  },
+  {
+    description: "真实场景下的方案展示、案例复盘与演示。",
+    name: "案例演示",
+    slug: "case-demo",
+  },
+  {
     description: "用于归类未指定明确主题的帖子。",
     name: "其他",
     slug: "other",

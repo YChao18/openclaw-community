@@ -104,3 +104,41 @@ button {
   background: color-mix(in srgb, var(--brand-yellow) 30%, transparent);
   color: var(--text-primary);
 }
+
+.post-editor__content .tiptap {
+  min-height: 18rem;
+  outline: none;
+}
+
+.post-editor__content .tiptap p.is-editor-empty:first-child::before {
+  color: color-mix(in srgb, var(--text-secondary) 80%, transparent);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.post-editor__content .tiptap p {
+  margin: 0;
+}
+
+.post-editor__content .tiptap p + p {
+  margin-top: 0.9rem;
+}
+
+.post-editor__content .tiptap img,
+.post-rich-content img {
+  border-radius: 1rem;
+  display: block;
+  height: auto;
+  margin: 1rem 0;
+  max-width: 100%;
+}
+
+.post-rich-content p {
+  margin: 0;
+}
+
+.post-rich-content p + p {
+  margin-top: 0.9rem;
+}

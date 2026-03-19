@@ -1,5 +1,6 @@
 import { PostStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getPostPlainTextContent } from "@/lib/post-content";
 import { getUserDisplayName } from "@/lib/user/service";
 
 const postFeedArgs = Prisma.validator<Prisma.PostDefaultArgs>()({
@@ -183,6 +184,18 @@ export type FavoritePostItem = FavoritePostQueryResult["post"] & {
 const FALLBACK_TAG_NAME = "其他";
 const FALLBACK_TAG_SLUG = "other";
 const FALLBACK_TAG_DESCRIPTION = "用于归类未指定明确主题的帖子。";
+const REQUIRED_TAG_DEFINITIONS = [
+  {
+    description: "OpenClaw 上手指南、教程与使用经验的分享。",
+    name: "openclaw教程",
+    slug: "openclaw-tutorial",
+  },
+  {
+    description: "真实场景下的方案展示、案例复盘与演示。",
+    name: "案例演示",
+    slug: "case-demo",
+  },
+] as const;
 
 function withPostCounts<
   T extends { _count: { favorites: number; likes: number } },
@@ -219,7 +232,7 @@ export async function getPostFeed(options: GetPostFeedOptions = {}) {
 }
 
 export async function getTagFacets() {
-  await ensureFallbackTag();
+  await ensureRequiredTags();
 
   const tags = await prisma.tag.findMany({
     orderBy: [{ name: "asc" }],
@@ -904,7 +917,7 @@ export function getAuthorDisplayName(author: {
 }
 
 export function getPostExcerpt(content: string) {
-  const normalized = content.replace(/\s+/g, " ").trim();
+  const normalized = getPostPlainTextContent(content);
 
   if (normalized.length <= 120) {
     return normalized;
@@ -1003,9 +1016,31 @@ async function resolvePostTagIds(tagIds: string[]) {
 }
 
 async function ensureFallbackTag() {
+  return ensureTagDefinition({
+    description: FALLBACK_TAG_DESCRIPTION,
+    name: FALLBACK_TAG_NAME,
+    slug: FALLBACK_TAG_SLUG,
+  });
+}
+
+async function ensureRequiredTags() {
+  await Promise.all(
+    REQUIRED_TAG_DEFINITIONS.map((tagDefinition) =>
+      ensureTagDefinition(tagDefinition),
+    ),
+  );
+
+  await ensureFallbackTag();
+}
+
+async function ensureTagDefinition(input: {
+  description: string;
+  name: string;
+  slug: string;
+}) {
   const existingTag = await prisma.tag.findUnique({
     where: {
-      name: FALLBACK_TAG_NAME,
+      name: input.name,
     },
   });
 
@@ -1013,13 +1048,13 @@ async function ensureFallbackTag() {
     return existingTag;
   }
 
-  const slug = await createUniqueTagSlug(FALLBACK_TAG_SLUG);
+  const slug = await createUniqueTagSlug(input.slug);
 
   try {
     return await prisma.tag.create({
       data: {
-        description: FALLBACK_TAG_DESCRIPTION,
-        name: FALLBACK_TAG_NAME,
+        description: input.description,
+        name: input.name,
         slug,
       },
     });
@@ -1030,7 +1065,7 @@ async function ensureFallbackTag() {
     ) {
       const retryTag = await prisma.tag.findUnique({
         where: {
-          name: FALLBACK_TAG_NAME,
+          name: input.name,
         },
       });
 
@@ -1040,9 +1075,9 @@ async function ensureFallbackTag() {
 
       return prisma.tag.create({
         data: {
-          description: FALLBACK_TAG_DESCRIPTION,
-          name: FALLBACK_TAG_NAME,
-          slug: await createUniqueTagSlug(`${FALLBACK_TAG_SLUG}-tag`),
+          description: input.description,
+          name: input.name,
+          slug: await createUniqueTagSlug(`${input.slug}-tag`),
         },
       });
     }
