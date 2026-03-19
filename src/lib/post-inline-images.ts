@@ -1,3 +1,4 @@
+import { put } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -9,6 +10,7 @@ export const INLINE_IMAGE_UPLOAD_DIR = join(
   "post-inline-images",
 );
 export const INLINE_IMAGE_PUBLIC_PREFIX = "/uploads/post-inline-images";
+export const INLINE_IMAGE_BLOB_PREFIX = "post-inline-images";
 
 const ALLOWED_INLINE_IMAGE_TYPES = new Set([
   "image/gif",
@@ -31,8 +33,26 @@ type InlineImageValidationError = {
   status: 400 | 413;
 };
 
+type InlineImageStorageBackend = "blob" | "local";
+
 function getInlineImageExtension(file: File) {
   return INLINE_IMAGE_EXTENSION_MAP[file.type] ?? "";
+}
+
+function getInlineImageStorageName(file: File) {
+  return `${Date.now()}-${randomUUID()}${getInlineImageExtension(file)}`;
+}
+
+function getInlineImageBlobPathname(file: File) {
+  return `${INLINE_IMAGE_BLOB_PREFIX}/${getInlineImageStorageName(file)}`;
+}
+
+function shouldUseBlobStorage() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+export function getInlineImageStorageBackend(): InlineImageStorageBackend {
+  return shouldUseBlobStorage() ? "blob" : "local";
 }
 
 export function validateInlineImageFile(file: File | null | undefined) {
@@ -67,16 +87,32 @@ export function validateInlineImageFile(file: File | null | undefined) {
   return null;
 }
 
+export class InlineImageConfigurationError extends Error {
+  readonly missingEnvVar: string;
+  readonly storageBackend: "blob";
+
+  constructor(missingEnvVar: string) {
+    super(
+      `Inline image upload requires ${missingEnvVar} to be set in production.`,
+    );
+    this.name = "InlineImageConfigurationError";
+    this.missingEnvVar = missingEnvVar;
+    this.storageBackend = "blob";
+  }
+}
+
 export class InlineImageStorageError extends Error {
   readonly cause: unknown;
   readonly fileSize: number;
   readonly fileType: string;
+  readonly storageBackend: InlineImageStorageBackend;
   readonly targetPath: string;
 
   constructor(input: {
     cause: unknown;
     fileSize: number;
     fileType: string;
+    storageBackend: InlineImageStorageBackend;
     targetPath: string;
   }) {
     super("Failed to persist inline image file.");
@@ -84,6 +120,7 @@ export class InlineImageStorageError extends Error {
     this.cause = input.cause;
     this.fileSize = input.fileSize;
     this.fileType = input.fileType;
+    this.storageBackend = input.storageBackend;
     this.targetPath = input.targetPath;
   }
 }
@@ -106,9 +143,40 @@ export function isInlineImagePersistenceError(error: unknown) {
   );
 }
 
+export function isInlineImageConfigurationError(error: unknown) {
+  return error instanceof InlineImageConfigurationError;
+}
+
 export async function persistInlineImageFile(file: File) {
-  const extension = getInlineImageExtension(file);
-  const storageName = `${Date.now()}-${randomUUID()}${extension}`;
+  if (shouldUseBlobStorage()) {
+    const targetPath = getInlineImageBlobPathname(file);
+
+    try {
+      const uploadedBlob = await put(targetPath, file, {
+        access: "public",
+        addRandomSuffix: false,
+        contentType: file.type,
+      });
+
+      return {
+        url: uploadedBlob.url,
+      };
+    } catch (error) {
+      throw new InlineImageStorageError({
+        cause: error,
+        fileSize: file.size,
+        fileType: file.type,
+        storageBackend: "blob",
+        targetPath,
+      });
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new InlineImageConfigurationError("BLOB_READ_WRITE_TOKEN");
+  }
+
+  const storageName = getInlineImageStorageName(file);
   const targetPath = join(INLINE_IMAGE_UPLOAD_DIR, storageName);
 
   try {
@@ -120,6 +188,7 @@ export async function persistInlineImageFile(file: File) {
       cause: error,
       fileSize: file.size,
       fileType: file.type,
+      storageBackend: "local",
       targetPath,
     });
   }

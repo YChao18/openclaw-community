@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
-  INLINE_IMAGE_UPLOAD_DIR,
-  InlineImageStorageError,
+  getInlineImageStorageBackend,
+  isInlineImageConfigurationError,
   isInlineImagePersistenceError,
   persistInlineImageFile,
   validateInlineImageFile,
 } from "@/lib/post-inline-images";
+
+export const runtime = "nodejs";
 
 function getErrorSummary(error: unknown) {
   if (error instanceof Error) {
@@ -22,16 +24,49 @@ function getErrorSummary(error: unknown) {
   };
 }
 
+function getInlineImageTarget(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "targetPath" in error &&
+    typeof error.targetPath === "string"
+  ) {
+    return error.targetPath;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "missingEnvVar" in error &&
+    typeof error.missingEnvVar === "string"
+  ) {
+    return error.missingEnvVar;
+  }
+
+  return getInlineImageStorageBackend() === "blob"
+    ? "post-inline-images/*"
+    : "public/uploads/post-inline-images";
+}
+
+function getInlineImageStorageBackendForLog(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "storageBackend" in error &&
+    (error.storageBackend === "blob" || error.storageBackend === "local")
+  ) {
+    return error.storageBackend;
+  }
+
+  return getInlineImageStorageBackend();
+}
+
 function logInlineImageUploadError(input: {
   error: unknown;
   file: File | null;
-  phase: "auth" | "formData" | "storage" | "unknown";
+  phase: "auth" | "config" | "formData" | "storage" | "unknown";
 }) {
   const summary = getErrorSummary(input.error);
-  const targetPath =
-    input.error instanceof InlineImageStorageError
-      ? input.error.targetPath
-      : INLINE_IMAGE_UPLOAD_DIR;
 
   console.error("Failed to upload post inline image", {
     errorMessage: summary.message,
@@ -39,7 +74,8 @@ function logInlineImageUploadError(input: {
     fileSize: input.file?.size ?? null,
     mimeType: input.file?.type ?? null,
     phase: input.phase,
-    targetPath,
+    storageBackend: getInlineImageStorageBackendForLog(input.error),
+    targetPath: getInlineImageTarget(input.error),
   });
 }
 
@@ -68,7 +104,7 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(
-        { message: "正文图片请求格式无效，请重新选择图片后再试。" },
+        { message: "正文图片上传请求无效，请重新选择图片后再试。" },
         { status: 400 },
       );
     }
@@ -96,21 +132,24 @@ export async function POST(request: Request) {
 
     return NextResponse.json(uploadedImage);
   } catch (error) {
+    const isConfigError = isInlineImageConfigurationError(error);
     const isStorageError = isInlineImagePersistenceError(error);
 
     logInlineImageUploadError({
       error,
       file,
-      phase: isStorageError ? "storage" : file ? "unknown" : "auth",
+      phase: isConfigError ? "config" : isStorageError ? "storage" : file ? "unknown" : "auth",
     });
 
     return NextResponse.json(
       {
-        message: isStorageError
-          ? "正文图片保存失败，请检查上传目录权限或挂载后重试。"
-          : "正文图片上传失败，请稍后重试。",
+        message: isConfigError
+          ? "正文图片上传配置缺失：线上环境未设置 BLOB_READ_WRITE_TOKEN，无法保存正文图片。"
+          : isStorageError
+            ? "正文图片保存失败，请检查线上 Blob 存储配置或稍后重试。"
+            : "正文图片上传失败，请稍后重试。",
       },
-      { status: isStorageError ? 507 : 500 },
+      { status: isConfigError ? 500 : isStorageError ? 507 : 500 },
     );
   }
 }
