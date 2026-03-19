@@ -32,7 +32,10 @@ services:
       PORT: 3000
     ports:
       - "3000:3000"
+    volumes:
+      - uploads_data:/app/public/uploads
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  uploads_data:

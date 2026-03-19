@@ -1,0 +1,143 @@
+<svg width="1600" height="2480" viewBox="0 0 1600 2480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="2480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9EC"/>
+      <stop offset="1" stop-color="#FFF2F2"/>
+    </linearGradient>
+    <linearGradient id="card" x1="220" y1="0" x2="1380" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFFDF8"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#D6C7A7" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrowHead" markerWidth="14" markerHeight="14" refX="7" refY="7" orient="auto">
+      <path d="M0,0 L14,7 L0,14 Z" fill="#F59E0B"/>
+    </marker>
+    <style>
+      .title { font: 700 42px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #1F2937; }
+      .subtitle { font: 500 20px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #6B7280; }
+      .stepNo { font: 700 28px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #B45309; }
+      .stepTitle { font: 700 26px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #111827; }
+      .stepBody { font: 400 20px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #374151; }
+      .stepMeta { font: 600 18px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #C2410C; }
+      .footer { font: 500 18px 'Microsoft YaHei', 'Noto Sans SC', sans-serif; fill: #6B7280; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="2480" fill="url(#bg)"/>
+
+  <text x="800" y="92" text-anchor="middle" class="title">Claw Pond 项目开发流程图</text>
+  <text x="800" y="132" text-anchor="middle" class="subtitle">基于仓库结构、Prisma 迁移顺序与实际代码实现还原</text>
+
+  <line x1="800" y1="190" x2="800" y2="2360" stroke="#F5B041" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 14"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="200" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="263" r="34" fill="#FEF3C7"/>
+    <text x="280" y="272" text-anchor="middle" class="stepNo">1</text>
+    <text x="340" y="246" class="stepTitle">项目立项与技术选型</text>
+    <text x="340" y="280" class="stepBody">确定要做 OpenClaw 社区产品，选择 Next.js 16、React 19、Prisma、PostgreSQL、Tailwind CSS 4。</text>
+  </g>
+  <line x1="800" y1="326" x2="800" y2="374" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="390" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="453" r="34" fill="#FEF3C7"/>
+    <text x="280" y="462" text-anchor="middle" class="stepNo">2</text>
+    <text x="340" y="436" class="stepTitle">初始化工程骨架</text>
+    <text x="340" y="470" class="stepBody">创建 App Router 项目，配置 TypeScript、ESLint、Prettier、Docker、环境变量与基础 npm scripts。</text>
+  </g>
+  <line x1="800" y1="516" x2="800" y2="564" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="580" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="643" r="34" fill="#FEF3C7"/>
+    <text x="280" y="652" text-anchor="middle" class="stepNo">3</text>
+    <text x="340" y="626" class="stepTitle">搭建基础界面框架</text>
+    <text x="340" y="660" class="stepBody">实现全局 Layout、Header、Footer、主题切换，并建立 src/app、src/components、src/lib 目录结构。</text>
+  </g>
+  <line x1="800" y1="706" x2="800" y2="754" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="770" rx="28" ry="28" width="1160" height="150" fill="url(#card)"/>
+    <circle cx="280" cy="845" r="34" fill="#FEF3C7"/>
+    <text x="280" y="854" text-anchor="middle" class="stepNo">4</text>
+    <text x="340" y="822" class="stepTitle">设计数据库核心模型</text>
+    <text x="340" y="856" class="stepBody">定义 User、Post、Comment、Tag、Session 等模型，完成 Prisma schema 与首轮数据库迁移。</text>
+    <text x="340" y="888" class="stepMeta">迁移阶段：m1_community_core</text>
+  </g>
+  <line x1="800" y1="920" x2="800" y2="968" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="984" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="1047" r="34" fill="#FEF3C7"/>
+    <text x="280" y="1056" text-anchor="middle" class="stepNo">5</text>
+    <text x="340" y="1030" class="stepTitle">实现社区最小闭环</text>
+    <text x="340" y="1064" class="stepBody">完成首页、帖子列表、帖子详情、发帖、评论、标签分类与基础内容展示，先让社区能用起来。</text>
+  </g>
+  <line x1="800" y1="1110" x2="800" y2="1158" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="1174" rx="28" ry="28" width="1160" height="150" fill="url(#card)"/>
+    <circle cx="280" cy="1249" r="34" fill="#FEF3C7"/>
+    <text x="280" y="1258" text-anchor="middle" class="stepNo">6</text>
+    <text x="340" y="1226" class="stepTitle">接入邮箱验证码认证</text>
+    <text x="340" y="1260" class="stepBody">新增 EmailVerificationCode 表，完成发送验证码、校验验证码、限流、防暴力尝试等认证基础能力。</text>
+    <text x="340" y="1292" class="stepMeta">迁移阶段：m2_email_auth</text>
+  </g>
+  <line x1="800" y1="1324" x2="800" y2="1372" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="1388" rx="28" ry="28" width="1160" height="150" fill="url(#card)"/>
+    <circle cx="280" cy="1463" r="34" fill="#FEF3C7"/>
+    <text x="280" y="1472" text-anchor="middle" class="stepNo">7</text>
+    <text x="340" y="1440" class="stepTitle">增强社区互动能力</text>
+    <text x="340" y="1474" class="stepBody">新增点赞、收藏、浏览量统计，并实现热门、精选、待解决等内容排序与社区活跃度展示逻辑。</text>
+    <text x="340" y="1506" class="stepMeta">迁移阶段：m3_interactions_foundation</text>
+  </g>
+  <line x1="800" y1="1538" x2="800" y2="1586" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="1602" rx="28" ry="28" width="1160" height="150" fill="url(#card)"/>
+    <circle cx="280" cy="1677" r="34" fill="#FEF3C7"/>
+    <text x="280" y="1686" text-anchor="middle" class="stepNo">8</text>
+    <text x="340" y="1654" class="stepTitle">升级为密码认证体系</text>
+    <text x="340" y="1688" class="stepBody">在用户表增加 passwordHash，完成注册设密码、邮箱密码登录、忘记密码重置等完整认证流程。</text>
+    <text x="340" y="1720" class="stepMeta">迁移阶段：m4_password_email_auth</text>
+  </g>
+  <line x1="800" y1="1752" x2="800" y2="1800" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="1816" rx="28" ry="28" width="1160" height="150" fill="url(#card)"/>
+    <circle cx="280" cy="1891" r="34" fill="#FEF3C7"/>
+    <text x="280" y="1900" text-anchor="middle" class="stepNo">9</text>
+    <text x="340" y="1868" class="stepTitle">增加富文本与上传能力</text>
+    <text x="340" y="1902" class="stepBody">接入 Tiptap 富文本编辑器，支持正文图片上传、附件上传与 sanitize-html 内容清洗。</text>
+    <text x="340" y="1934" class="stepMeta">迁移阶段：m5_post_attachments</text>
+  </g>
+  <line x1="800" y1="1966" x2="800" y2="2014" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="2030" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="2093" r="34" fill="#FEF3C7"/>
+    <text x="280" y="2102" text-anchor="middle" class="stepNo">10</text>
+    <text x="340" y="2076" class="stepTitle">完善个人中心与内容管理</text>
+    <text x="340" y="2110" class="stepBody">实现我的帖子、我的收藏、用户名修改、退出登录，以及编辑/删除帖子和评论等管理功能。</text>
+  </g>
+  <line x1="800" y1="2156" x2="800" y2="2204" stroke="url(#arrow)" stroke-width="6" marker-end="url(#arrowHead)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="2220" rx="28" ry="28" width="1160" height="126" fill="url(#card)"/>
+    <circle cx="280" cy="2283" r="34" fill="#FEF3C7"/>
+    <text x="280" y="2292" text-anchor="middle" class="stepNo">11</text>
+    <text x="340" y="2266" class="stepTitle">产品化页面、种子数据与部署准备</text>
+    <text x="340" y="2300" class="stepBody">补齐 About/首页展示、seed 演示数据、Dockerfile、docker-compose、构建脚本，为联调与部署做准备。</text>
+  </g>
+
+  <text x="800" y="2424" text-anchor="middle" class="footer">流程总结：项目骨架 → 社区核心 → 验证码认证 → 互动体系 → 密码认证 → 富文本与附件 → 个人中心 → 展示与部署</text>
+</svg>

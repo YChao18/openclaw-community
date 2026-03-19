@@ -54,8 +54,12 @@ export function PostRichTextEditor({
       | { message?: string; url?: string }
       | null;
 
-    if (!response.ok || !payload?.url) {
+    if (!response.ok) {
       throw new Error(payload?.message || "正文图片上传失败，请稍后重试。");
+    }
+
+    if (!payload?.url) {
+      throw new Error("正文图片上传成功，但未返回可用地址，请稍后重试。");
     }
 
     return payload.url;
